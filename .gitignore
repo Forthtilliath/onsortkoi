@@ -39,3 +39,12 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Markdown : seuls README et CHANGELOG sont suivis
+*.md
+!README.md
+!CHANGELOG.md
+
+# Exports MyLudo personnels (jamais commités)
+collection*.json
+myludo*.json
