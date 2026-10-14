@@ -1,4 +1,5 @@
 import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
+import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
@@ -7,6 +8,7 @@ import { isStandalone } from './domain/filters';
 import type { Game } from './domain/types';
 import { pickAndImport } from './importFile';
 import { loadCollection, saveCollection, type StoredCollection } from './storage';
+import { showToast } from './ui/Toast';
 
 export function useCollection() {
   const [collection, setCollection] = useState<StoredCollection | null>(null);
@@ -24,7 +26,8 @@ export function useCollection() {
     try {
       setCollection(await saveCollection(games));
       backup.notifyDataChanged();
-      Alert.alert('Import réussi', describe(games));
+      successFeedback();
+      showToast(`Import réussi : ${describe(games)}`);
     } catch {
       Alert.alert('Import impossible', "Une erreur inattendue s'est produite. Rien n'a été modifié.");
     }

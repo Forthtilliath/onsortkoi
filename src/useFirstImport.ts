@@ -1,4 +1,5 @@
 import { defaultLabels, errorMessage } from '@forthtilliath/expo-backup-ui';
+import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 
@@ -6,10 +7,15 @@ import { applyBackupData, backup } from './backupManager';
 import type { Backup } from './domain/backup';
 import type { Game } from './domain/types';
 import { pickCollectionFile } from './importFile';
+import { showToast } from './ui/Toast';
+
+/** Action de l'accueil en cours : import d'un fichier ou restauration Drive. */
+export type FirstImportTask = 'file' | 'drive';
 
 function announceRestored({ collection }: Backup) {
   const date = new Date(collection.importedAt).toLocaleDateString('fr-FR');
-  Alert.alert('Sauvegarde restaurée', `${collection.games.length} jeux, importés de MyLudo le ${date}.`);
+  successFeedback();
+  showToast(`Sauvegarde restaurée : ${collection.games.length} jeux, importés de MyLudo le ${date}.`);
 }
 
 /**
@@ -17,22 +23,22 @@ function announceRestored({ collection }: Backup) {
  * export MyLudo ou sauvegarde, et restauration depuis Google Drive.
  */
 export function useFirstImport(importGames: (games: Game[]) => Promise<void>) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<FirstImportTask | null>(null);
 
-  const run = useCallback(async (task: () => Promise<void>) => {
-    setBusy(true);
+  const run = useCallback(async (task: FirstImportTask, work: () => Promise<void>) => {
+    setBusy(task);
     try {
-      await task();
+      await work();
     } catch (error) {
       Alert.alert('Import impossible', errorMessage(error, defaultLabels.fr));
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }, []);
 
   const importFile = useCallback(
     () =>
-      run(async () => {
+      run('file', async () => {
         const result = await pickCollectionFile();
         if (!result) return;
         if (!result.ok) {
@@ -52,7 +58,7 @@ export function useFirstImport(importGames: (games: Game[]) => Promise<void>) {
 
   const restoreFromDrive = useCallback(
     () =>
-      run(async () => {
+      run('drive', async () => {
         const result = await backup.connectCloud();
         if (result.status === 'cancelled') return;
         if (result.status === 'connected') {
