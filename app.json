@@ -41,7 +41,7 @@
       ],
       "@forthtilliath/expo-config-plugins/withAndroidAbis",
       "@forthtilliath/expo-config-plugins/withShortCxxPath",
-      "@react-native-google-signin/google-signin",
+      "@react-native-google-signin/google-signin/app.plugin.js",
       "expo-secure-store",
       "expo-font"
     ]
