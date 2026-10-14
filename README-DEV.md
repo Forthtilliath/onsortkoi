@@ -11,7 +11,8 @@ Présentation fonctionnelle de l'app : [README.md](README.md).
 | Validation | [zod 4](https://zod.dev), messages en français (`z.locales.fr()`) |
 | Stockage | `@react-native-async-storage/async-storage` |
 | Fichiers | `expo-file-system` (sélecteur + lecture), `expo-sharing` (menu de partage) |
-| Composants partagés | `@forthtilliath/react-native-kit` (`BottomSheet`, `SwitchRow`, `BackupSettingsScreen`, `shareTextFile`, `confirmDestructive`) |
+| Composants partagés | `@forthtilliath/react-native-kit` (`BottomSheet`, `SwitchRow`, `confirmDestructive`) |
+| Sauvegarde | `@forthtilliath/expo-backup` (Drive `appDataFolder`, fichier, annulation) + `@forthtilliath/expo-backup-ui` (`BackupScreen`) |
 | Tests | Jest 29 + `jest-expo` |
 | Cible | **Android uniquement**, identifiant `com.forthtilliath.onsortkoi` |
 
@@ -58,6 +59,7 @@ src/
 │   ├── importSchema.ts  schéma zod de l'export MyLudo → Game[]
 │   ├── gameSchema.ts    schéma zod d'un Game, de la collection et des réglages enregistrés
 │   ├── backup.ts        format de sauvegarde versionné (création, lecture, nom de fichier)
+│   ├── collectionFile.ts accueil : reconnaît un export MyLudo ou une sauvegarde
 │   ├── filters.ts       Filters, filtrage, tri, comptage des tags (facettes)
 │   ├── durations.ts     tranches de durée et test de chevauchement
 │   ├── activeFilters.ts critères actifs → puces { label, clear }
@@ -65,11 +67,11 @@ src/
 │   └── __tests__/
 ├── storage.ts           AsyncStorage + revalidation zod au chargement
 ├── importFile.ts        sélecteur de fichier, limite de taille, lecture
-├── backupFile.ts        partage et restauration d'une sauvegarde
 ├── useCollection.ts     chargement, import, remplacement de la collection
 ├── useSettings.ts       chargement et enregistrement des réglages
 ├── useGameFilters.ts    filtres en cours, résultats, tags proposés
-├── useBackup.ts         export / restauration, alertes
+├── backupManager.ts     gestionnaire expo-backup : collect / parse (readBackup) / apply
+├── useFirstImport.ts    accueil : import d'un fichier (MyLudo ou sauvegarde), restauration Drive
 ├── components/          écrans et panneaux propres à l'app
 │   ├── filters/         SearchBar, FilterSheet, TagFilterRows, ActiveFilterBar
 │   └── game/            GameCard, GameTile, GameSheet, libellés
@@ -83,7 +85,8 @@ Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures
 1. **Import** : `pickJsonText` (sélecteur système, fichier `content://` lu directement) → `importCollection` (zod) → `saveCollection` → état de `useCollection`.
 2. **Filtrage** : `useGameFilters` combine collection, filtres et réglages. `applyFilters` trie par titre (`localeCompare` en français). `facetTags` compte, pour chaque tag, les jeux retenus par les *autres* critères : c'est le nombre affiché à côté du tag.
 3. **Réglages** : un changement passe par `pruneFor`, qui retire des filtres actifs les tags qui ne sont plus proposés. Un tag choisi depuis la fiche d'un jeu reste actif même s'il n'est pas proposé dans les filtres.
-4. **Sauvegarde** : `createBackup` → `shareTextFile` (menu de partage). **Restauration** : `pickJsonText` → `readBackup` → `saveBackup` (un seul `multiSet`) → `onRestored`.
+4. **Sauvegarde** : `backup` ([backupManager.ts](src/backupManager.ts)), créé avec `createBackupManager`. `serialize` = `createBackup`, `parse` = `readBackup` (zod, le message d'erreur est affiché tel quel), `apply` = `saveBackup` (un seul `multiSet`) puis mise à jour de l'état via `setBackupAppliedListener`. `useCollection` et `useSettings` appellent `backup.notifyDataChanged()` après chaque écriture : envoi sur Drive 3 s plus tard, ou au passage en arrière-plan. `collect` lève une erreur tant qu'aucune collection n'existe : rien n'est envoyé.
+5. **Restauration Drive depuis l'accueil** ([useFirstImport.ts](src/useFirstImport.ts)) : `connectCloud` ; en cas de sauvegarde existante (`conflict`), elle est appliquée **avant** `resolveConflict(…, 'cloud')`, car `restore` fait d'abord une copie de sécurité des données locales via `collect`, impossible sur un téléphone vide.
 
 ### Règles de filtrage
 
@@ -141,6 +144,19 @@ cd android && ./gradlew assembleRelease   # → app/build/outputs/apk/release/ap
 - Vérifier la signature : `apksigner verify --print-certs` doit afficher les empreintes ci-dessus.
 - Nommer l'APK publié avec l'app et la version : `Onsortkoi-1.0.0.apk`, pas `app-release.apk`.
 - Ne jamais changer `android.package` après une première distribution : Android verrait une autre app (pas de mise à jour, données perdues).
+
+## Google Drive (sauvegarde automatique)
+
+Scope `drive.appdata` uniquement (classé « non sensible » par Google) : l'app ne voit que son dossier privé `appDataFolder`, invisible dans l'interface de Drive. Pas de secret dans l'APK : le client OAuth Android est reconnu par le nom de package et l'empreinte de signature.
+
+À faire une fois dans la [console Google Cloud](https://console.cloud.google.com/) :
+
+1. Un projet → **API et services ▸ Bibliothèque** → activer **Google Drive API**.
+2. **Écran de consentement OAuth** : externe, ajouter le scope `…/auth/drive.appdata`, s'ajouter comme utilisateur test (ou publier l'app).
+3. **Identifiants ▸ Créer un ID client OAuth ▸ Android** : package `com.forthtilliath.onsortkoi`, SHA-1 `3B:26:48:D1:26:D4:0A:3B:BE:70:1D:AE:AD:08:38:62:63:F1:FD:4C` (clé d'upload). Un build debug, signé autrement, demande son propre client.
+4. Reconstruire l'APK (module natif `@react-native-google-signin/google-signin`).
+
+`oauth-misconfigured` (DEVELOPER_ERROR) : l'étape 3 ne correspond pas à l'APK. `drive-api-disabled` : étape 1 oubliée. Détails : README de [`@forthtilliath/expo-backup`](https://www.npmjs.com/package/@forthtilliath/expo-backup).
 
 ## Conventions
 
