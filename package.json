@@ -4,8 +4,8 @@
   "main": "index.ts",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
-    "@forthtilliath/expo-backup": "^0.1.0",
-    "@forthtilliath/expo-backup-ui": "^0.1.0",
+    "@forthtilliath/expo-backup": "^0.2.0",
+    "@forthtilliath/expo-backup-ui": "^0.2.0",
     "@forthtilliath/expo-release-updates": "^0.7.0",
     "@forthtilliath/expo-release-updates-ui": "^0.4.1",
     "@forthtilliath/react-native-kit": "^0.17.0",
