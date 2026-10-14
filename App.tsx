@@ -4,39 +4,58 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from '
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from './src/components/EmptyState';
-import { FilterPanel } from './src/components/FilterPanel';
+import { FilterPanel, type TagOption } from './src/components/FilterPanel';
 import { GameCard } from './src/components/GameCard';
-import { TagPicker } from './src/components/TagPicker';
-import { applyFilters, EMPTY_FILTERS, type Filters } from './src/domain/filters';
+import { SettingsScreen } from './src/components/SettingsScreen';
+import { applyFilters, collectTags, EMPTY_FILTERS, type Filters } from './src/domain/filters';
+import { filterableTags, pruneFilterTags, type Settings } from './src/domain/settings';
+import type { TagGroup } from './src/domain/types';
 import { colors, spacing } from './src/ui/theme';
 import { useCollection } from './src/useCollection';
+import { useSettings } from './src/useSettings';
 
-const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR');
+const FILTER_GROUPS: { group: TagGroup; label: string }[] = [
+  { group: 'categories', label: 'Catégories' },
+  { group: 'mechanisms', label: 'Mécanismes' },
+  { group: 'themes', label: 'Thèmes' },
+];
 
 function Main() {
   const { collection, loading, importing, runImport } = useCollection();
+  const { settings, updateSettings } = useSettings();
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [tagsOpen, setTagsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const games = collection?.games;
-  const results = useMemo(() => (games ? applyFilters(games, filters) : []), [games, filters]);
+  const activeFilters = useMemo(() => pruneFilterTags(filters, settings), [filters, settings]);
+  const results = useMemo(() => (games ? applyFilters(games, activeFilters) : []), [games, activeFilters]);
+
+  const tagOptions = useMemo<TagOption[]>(() => {
+    if (!games) return [];
+    return FILTER_GROUPS.map(({ group, label }) => ({
+      group,
+      label,
+      tags: filterableTags(settings, group, collectTags(games, group).map((t) => t.name)),
+    })).filter((option) => option.tags.length > 0);
+  }, [games, settings]);
+
+  const changeSettings = (next: Settings) => {
+    updateSettings(next);
+    setFilters((f) => pruneFilterTags(f, next));
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.appTitle}>LudoCollec</Text>
-          {collection && (
-            <Text style={styles.meta}>
-              {collection.games.length} jeux · importés le {formatDate(collection.importedAt)}
-            </Text>
-          )}
-        </View>
+        <Text style={styles.appTitle}>LudoCollec</Text>
         {collection && (
-          <Pressable onPress={runImport} disabled={importing} accessibilityRole="button" hitSlop={8}>
-            <Text style={[styles.importLink, importing && styles.disabled]}>
-              {importing ? 'Import…' : 'Réimporter'}
-            </Text>
+          <Pressable
+            onPress={() => setSettingsOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Réglages"
+            hitSlop={8}
+          >
+            <Text style={styles.headerLink}>Réglages</Text>
           </Pressable>
         )}
       </View>
@@ -53,9 +72,10 @@ function Main() {
             renderItem={({ item }) => <GameCard game={item} />}
             ListHeaderComponent={
               <FilterPanel
-                filters={filters}
+                filters={activeFilters}
                 onChange={setFilters}
-                onOpenTags={() => setTagsOpen(true)}
+                tagOptions={tagOptions}
+                onOpenSettings={() => setSettingsOpen(true)}
                 resultCount={results.length}
               />
             }
@@ -64,12 +84,14 @@ function Main() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           />
-          <TagPicker
-            visible={tagsOpen}
-            games={collection.games}
-            selected={filters.tags}
-            onChange={(tags) => setFilters((f) => ({ ...f, tags }))}
-            onClose={() => setTagsOpen(false)}
+          <SettingsScreen
+            visible={settingsOpen}
+            settings={settings}
+            onChange={changeSettings}
+            collection={collection}
+            onReimport={runImport}
+            importing={importing}
+            onClose={() => setSettingsOpen(false)}
           />
         </>
       )}
@@ -98,9 +120,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   appTitle: { fontSize: 22, fontWeight: '800', color: colors.primary },
-  meta: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  importLink: { fontSize: 15, fontWeight: '600', color: colors.primary },
-  disabled: { opacity: 0.5 },
+  headerLink: { fontSize: 15, fontWeight: '600', color: colors.primary },
   loader: { marginTop: spacing.xl },
   list: { paddingBottom: spacing.xl },
   noResult: { textAlign: 'center', color: colors.muted, marginTop: spacing.xl, paddingHorizontal: spacing.lg },
