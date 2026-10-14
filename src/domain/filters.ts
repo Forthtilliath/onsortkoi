@@ -24,7 +24,19 @@ export const EMPTY_FILTERS: Filters = {
 /** Types jouables seuls ; un type vide (non renseigné) est traité comme un jeu de base. */
 const STANDALONE_TYPES = new Set(['', 'basegame', 'standalone']);
 
-export const isStandalone = (game: Game) => STANDALONE_TYPES.has(game.type);
+/**
+ * Filtres qui montrent tous les jeux portant un tag : les autres critères et la recherche sont
+ * effacés, seul le choix d'afficher les extensions est conservé.
+ */
+export function filtersForTag(current: Filters, group: TagGroup, tag: string): Filters {
+  return {
+    ...EMPTY_FILTERS,
+    includeExpansions: current.includeExpansions,
+    tags: { ...EMPTY_FILTERS.tags, [group]: [tag] },
+  };
+}
+
+export const isStandalone =(game: Game) => STANDALONE_TYPES.has(game.type);
 
 export function normalize(text: string): string {
   return text
