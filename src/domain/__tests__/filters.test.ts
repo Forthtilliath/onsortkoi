@@ -1,4 +1,4 @@
-import { applyFilters, collectTags, EMPTY_FILTERS, facetTags, type Filters } from '../filters';
+import { applyFilters, collectTags, EMPTY_FILTERS, facetTags, type Filters, filtersForTag } from '../filters';
 import type { Game } from '../types';
 
 const game = (overrides: Partial<Game>): Game => ({
@@ -95,5 +95,23 @@ describe('facetTags', () => {
     const tags = { ...EMPTY_FILTERS.tags, categories: ['Jeu de tuiles'] };
     expect(facet({ tags })).toHaveLength(2);
     expect(facet({ tags: { ...tags, mechanisms: ['Coopératif'] } })).toEqual([]);
+  });
+});
+
+describe('filtersForTag', () => {
+  it('ne garde que le tag choisi et le choix des extensions', () => {
+    const current: Filters = {
+      ...EMPTY_FILTERS,
+      query: 'azul',
+      players: 3,
+      includeExpansions: true,
+      tags: { ...EMPTY_FILTERS.tags, categories: ['Jeu de tuiles'] },
+    };
+    expect(filtersForTag(current, 'mechanisms', 'Coopératif')).toEqual({
+      ...EMPTY_FILTERS,
+      includeExpansions: true,
+      tags: { ...EMPTY_FILTERS.tags, mechanisms: ['Coopératif'] },
+    });
+    expect(applyFilters(games, filtersForTag(EMPTY_FILTERS, 'mechanisms', 'Coopératif')).map((g) => g.id)).toEqual([1]);
   });
 });
