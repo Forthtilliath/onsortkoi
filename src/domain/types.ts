@@ -23,4 +23,7 @@ export type Game = {
   averageRating: number | null;
 };
 
-export type TagGroup = 'categories' | 'themes' | 'mechanisms';
+/** Collection enregistrée sur le téléphone. */
+export type StoredCollection = { importedAt: string; games: Game[] };
+
+export type TagGroup ='categories' | 'themes' | 'mechanisms';
