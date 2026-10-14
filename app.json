@@ -31,10 +31,14 @@
       "expo-sharing",
       [
         "@forthtilliath/expo-config-plugins/withReleaseSigning",
-        { "propertyPrefix": "ONSORTKOI" }
+        {
+          "propertyPrefix": "ONSORTKOI"
+        }
       ],
       "@forthtilliath/expo-config-plugins/withAndroidAbis",
-      "@forthtilliath/expo-config-plugins/withShortCxxPath"
+      "@forthtilliath/expo-config-plugins/withShortCxxPath",
+      "@react-native-google-signin/google-signin",
+      "expo-secure-store"
     ]
   }
 }
