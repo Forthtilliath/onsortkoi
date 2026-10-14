@@ -3,6 +3,7 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { normalize, type TagCount } from '../domain/filters';
+import { Icon } from '../ui/Icon';
 import { colors, radius, spacing } from '../ui/theme';
 
 type Props = {
@@ -69,7 +70,9 @@ export function TagChecklist({ visible, title, tags, selected, onChange, onClose
                 accessibilityState={{ checked }}
                 style={({ pressed }) => [styles.item, pressed && styles.pressed]}
               >
-                <Text style={[styles.box, checked && styles.boxChecked]}>{checked ? '✓' : ''}</Text>
+                <View style={[styles.box, checked && styles.boxChecked]}>
+                  {checked && <Icon name="checkmark" size={16} color={colors.onPrimary} />}
+                </View>
                 <Text style={styles.itemLabel}>{item.name}</Text>
                 <Text style={styles.itemCount}>{item.count}</Text>
               </Pressable>
@@ -125,10 +128,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1.5,
     borderColor: colors.primary,
-    textAlign: 'center',
-    color: colors.onPrimary,
-    fontWeight: '700',
-    lineHeight: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   boxChecked: { backgroundColor: colors.primary },
   itemLabel: { flex: 1, fontSize: 15, color: colors.text },
