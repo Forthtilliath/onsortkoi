@@ -49,6 +49,11 @@ describe('applyFilters', () => {
     expect(filter({ query: 'ecoute' })).toEqual([2]);
   });
 
+  it('cherche aussi dans les auteurs', () => {
+    const withAuthor = [...games, game({ id: 7, title: 'Akropolis', authors: ['Jules Messaud'] })];
+    expect(applyFilters(withAuthor, { ...EMPTY_FILTERS, query: 'messaud' }).map((g) => g.id)).toEqual([7]);
+  });
+
   it('filtre par nombre de joueurs, y compris « 2+ »', () => {
     expect(filter({ players: 1 })).toEqual([1]);
     expect(filter({ players: 8 })).toEqual([2]);

@@ -63,8 +63,8 @@ export const compareText = (a: string, b: string) => collator.compare(a, b);
 
 export const byTitle = (a: Game, b: Game) => compareText(a.title, b.title);
 
-/** Texte où porte la recherche : titre et sous-titre, normalisés. */
-export const searchText = (game: Game) => normalize(`${game.title} ${game.subtitle}`);
+/** Texte où porte la recherche : titre, sous-titre et auteurs, normalisés. */
+export const searchText = (game: Game) => normalize([game.title, game.subtitle, ...game.authors].join(' '));
 
 /** Texte de recherche de chaque jeu, calculé une fois par collection plutôt qu'à chaque frappe. */
 export type SearchIndex = Map<Game, string>;
