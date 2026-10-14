@@ -43,6 +43,7 @@ yarn-error.*
 # Markdown : seuls README et CHANGELOG sont suivis
 *.md
 !README.md
+!README-DEV.md
 !CHANGELOG.md
 
 # Exports MyLudo personnels (jamais commités)
