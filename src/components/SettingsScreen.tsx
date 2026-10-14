@@ -1,19 +1,17 @@
-import {
-  BackupSettingsScreen,
-  type BackupSettingsScreenLabels,
-} from '@forthtilliath/react-native-kit/components/settings/BackupSettingsScreen';
+import { BackupScreen } from '@forthtilliath/expo-backup-ui';
 import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { backup } from '../backupManager';
 import { collectTags } from '../domain/filters';
 import type { Settings } from '../domain/settings';
 import type { Game } from '../domain/types';
 import type { StoredCollection } from '../storage';
 import { Icon } from '../ui/Icon';
 import { IconButton } from '../ui/IconButton';
-import { backupStyles, switchColors } from '../ui/kitStyles';
+import { backupScreenStyles, switchColors } from '../ui/kitStyles';
 import { PrimaryButton } from '../ui/PrimaryButton';
 import { Section } from '../ui/Section';
 import { colors, radius, spacing } from '../ui/theme';
@@ -33,19 +31,7 @@ type Props = {
   collection: StoredCollection;
   onReimport: () => void;
   importing: boolean;
-  onExport: () => Promise<void>;
-  onRestore: () => Promise<void>;
   onClose: () => void;
-};
-
-const BACKUP_LABELS: BackupSettingsScreenLabels = {
-  hint: 'Choisis « Drive » dans le menu de partage pour y enregistrer ta collection et tes réglages. Sur un autre téléphone, restaure ce fichier depuis Drive.',
-  exportButton: 'Sauvegarder',
-  importButton: 'Restaurer',
-  importConfirmTitle: 'Restaurer une sauvegarde ?',
-  importConfirmMessage: 'Ta collection et tes réglages seront remplacés par ceux du fichier choisi.',
-  exportErrorTitle: 'Sauvegarde impossible',
-  importErrorTitle: 'Restauration impossible',
 };
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR');
@@ -57,8 +43,6 @@ export function SettingsScreen({
   collection,
   onReimport,
   importing,
-  onExport,
-  onRestore,
   onClose,
 }: Props) {
   const [editing, setEditing] = useState<ChoiceGroup | null>(null);
@@ -128,12 +112,10 @@ export function SettingsScreen({
           </Section>
 
           <Section title="Sauvegarde">
-            <BackupSettingsScreen
-              onExport={onExport}
-              onImport={onRestore}
-              icons={{ export: 'cloud-upload-outline', import: 'cloud-download-outline' }}
-              labels={BACKUP_LABELS}
-              styles={backupStyles}
+            <BackupScreen
+              manager={backup}
+              describeBackup={(data) => `${data.collection.games.length} jeux`}
+              styles={backupScreenStyles}
             />
           </Section>
         </ScrollView>

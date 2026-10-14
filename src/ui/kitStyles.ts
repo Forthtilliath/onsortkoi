@@ -1,5 +1,5 @@
+import type { BackupScreenStyles } from '@forthtilliath/expo-backup-ui';
 import type { BottomSheetStyles } from '@forthtilliath/react-native-kit/components/overlay/BottomSheet';
-import type { BackupSettingsScreenStyles } from '@forthtilliath/react-native-kit/components/settings/BackupSettingsScreen';
 import type { SwitchRowColors, SwitchRowStyles } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 
 import { colors, radius, spacing } from './theme';
@@ -28,17 +28,21 @@ export const switchStyles: SwitchRowStyles = {
   description: { color: colors.muted },
 };
 
-export const backupStyles: BackupSettingsScreenStyles = {
-  container: {
+// Écran de sauvegarde de @forthtilliath/expo-backup-ui.
+export const backupScreenStyles: BackupScreenStyles = {
+  section: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.lg,
   },
-  hint: { color: colors.muted, marginTop: 0 },
-  button: { minHeight: 50, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.primary },
-  buttonText: { color: colors.primary, fontSize: 16 },
-  iconColor: colors.primary,
+  sectionTitle: { color: colors.text },
+  hint: { color: colors.muted },
+  status: { color: colors.text },
+  button: { backgroundColor: colors.primary, minHeight: 50, borderRadius: radius.md, justifyContent: 'center' },
+  buttonText: { color: colors.onPrimary, fontSize: 16 },
+  secondaryButton: { minHeight: 50, borderRadius: radius.md, borderColor: colors.primary, justifyContent: 'center' },
+  secondaryButtonText: { color: colors.primary, fontSize: 16 },
+  ghostButtonText: { color: colors.primary },
   activityIndicatorColor: colors.primary,
 };
