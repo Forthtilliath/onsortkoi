@@ -1,5 +1,6 @@
+import { useAutoBackup } from '@forthtilliath/expo-backup-ui';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,15 +18,16 @@ import { filtersForTag, isStandalone } from './src/domain/filters';
 import type { Settings } from './src/domain/settings';
 import type { Game, TagGroup } from './src/domain/types';
 import { colors, spacing } from './src/ui/theme';
-import { useBackup } from './src/useBackup';
+import { backup, setBackupAppliedListener } from './src/backupManager';
 import { useCollection } from './src/useCollection';
+import { useFirstImport } from './src/useFirstImport';
 import { useGameFilters } from './src/useGameFilters';
 import { useSettings } from './src/useSettings';
 
 type Panel = 'filters' | 'game' | 'settings' | null;
 
 function Main() {
-  const { collection, loading, importing, runImport, replaceCollection } = useCollection();
+  const { collection, loading, importing, runImport, importGames, replaceCollection } = useCollection();
   const { settings, updateSettings } = useSettings();
   const games = collection?.games;
   const { filters, setFilters, results, criteria, tagOptions, pruneFor } = useGameFilters(games, settings);
@@ -53,14 +55,16 @@ function Main() {
     pruneFor(next);
   };
 
-  const backup = useBackup({
-    collection,
-    settings,
-    onRestored: ({ collection: restored, settings: restoredSettings }) => {
+  useAutoBackup(backup);
+  // Après une restauration (fichier, Drive ou annulation) : la mémoire suit le stockage.
+  useEffect(() => {
+    setBackupAppliedListener(({ collection: restored, settings: restoredSettings }) => {
       replaceCollection(restored);
       changeSettings(restoredSettings);
-    },
+    });
+    return () => setBackupAppliedListener(null);
   });
+  const firstImport = useFirstImport(importGames);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
@@ -69,7 +73,11 @@ function Main() {
       {loading ? (
         <ActivityIndicator style={styles.loader} color={colors.primary} />
       ) : !collection ? (
-        <EmptyState onImport={runImport} onRestore={backup.runRestore} busy={importing || backup.restoring} />
+        <EmptyState
+          onImport={firstImport.importFile}
+          onRestoreDrive={firstImport.restoreFromDrive}
+          busy={firstImport.busy}
+        />
       ) : (
         <>
           <View style={styles.controls}>
@@ -117,8 +125,6 @@ function Main() {
             collection={collection}
             onReimport={runImport}
             importing={importing}
-            onExport={backup.exportBackup}
-            onRestore={backup.restoreBackup}
             onClose={close}
           />
         </>

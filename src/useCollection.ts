@@ -2,6 +2,7 @@ import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helper
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
+import { backup } from './backupManager';
 import { isStandalone } from './domain/filters';
 import type { Game } from './domain/types';
 import { pickAndImport } from './importFile';
@@ -22,6 +23,7 @@ export function useCollection() {
   const apply = useCallback(async (games: Game[]) => {
     try {
       setCollection(await saveCollection(games));
+      backup.notifyDataChanged();
       Alert.alert('Import réussi', describe(games));
     } catch {
       Alert.alert('Import impossible', "Une erreur inattendue s'est produite. Rien n'a été modifié.");
@@ -53,7 +55,7 @@ export function useCollection() {
   }, [collection, apply]);
 
   // Pour une collection déjà enregistrée ailleurs (restauration d'une sauvegarde).
-  return { collection, loading, importing, runImport, replaceCollection: setCollection };
+  return { collection, loading, importing, runImport, importGames: apply, replaceCollection: setCollection };
 }
 
 function describe(games: Game[]): string {

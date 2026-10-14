@@ -11,12 +11,14 @@ const STEPS = [
 ];
 
 type Props = {
+  /** Accepte un export MyLudo ou une sauvegarde Onsortkoi : le format est reconnu à la lecture. */
   onImport: () => void;
-  onRestore: () => void;
+  /** Connecte un compte Google et récupère la sauvegarde automatique. */
+  onRestoreDrive: () => void;
   busy: boolean;
 };
 
-export function EmptyState({ onImport, onRestore, busy }: Props) {
+export function EmptyState({ onImport, onRestoreDrive, busy }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
@@ -38,19 +40,24 @@ export function EmptyState({ onImport, onRestore, busy }: Props) {
         ))}
       </View>
 
-      <PrimaryButton
-        label={busy ? 'Import en cours…' : 'Importer un export MyLudo'}
-        icon="cloud-download-outline"
-        onPress={onImport}
-        disabled={busy}
-      />
-      <PrimaryButton
-        label="Restaurer une sauvegarde Drive"
-        icon="refresh-outline"
-        onPress={onRestore}
-        disabled={busy}
-        outline
-      />
+      <View style={styles.action}>
+        <PrimaryButton
+          label={busy ? 'Import en cours…' : 'Importer un fichier'}
+          icon="document-outline"
+          onPress={onImport}
+          disabled={busy}
+        />
+        <PrimaryButton
+          label="Restaurer depuis Google Drive"
+          icon="cloud-download-outline"
+          onPress={onRestoreDrive}
+          disabled={busy}
+          outline
+        />
+        <Text style={styles.hint}>
+          Tu utilisais déjà Onsortkoi avec la sauvegarde automatique ? Connecte le même compte Google.
+        </Text>
+      </View>
     </View>
   );
 }
@@ -91,4 +98,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   stepText: { flex: 1, fontSize: 15, color: colors.text, lineHeight: 22 },
+  action: { gap: spacing.sm },
+  hint: { fontSize: 13, color: colors.muted, textAlign: 'center', lineHeight: 18 },
 });
