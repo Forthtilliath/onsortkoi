@@ -12,6 +12,9 @@ Tout fonctionne hors ligne. Seule la sauvegarde automatique, si tu l'actives, en
 
 Télécharge le fichier `.apk` de la dernière version sur la page [Releases](https://github.com/Forthtilliath/onsortkoi/releases), ouvre-le sur ton téléphone et autorise l'installation quand Android le demande.
 
+Empreinte SHA-256 du certificat de signature, pour vérifier l'APK (`apksigner verify --print-certs`) :
+`7D:64:4F:25:28:F8:71:29:6E:59:78:F8:91:AF:A0:76:73:D6:A0:BA:FD:58:27:D6:90:74:BD:0B:56:C7:40:95`
+
 ## Démarrer
 
 1. Sur [myludo.fr](https://www.myludo.fr) : *Mon compte → Exporter*, au format **JSON**.
