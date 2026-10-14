@@ -1,20 +1,20 @@
 import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 import { clearCriteria, describeActiveFilters } from '../../domain/activeFilters';
 import { DURATION_BUCKETS, type DurationKey } from '../../domain/durations';
-import type { Filters } from '../../domain/filters';
+import { type Filters, PLAYERS_OR_MORE, playersLabel } from '../../domain/filters';
 import { ChoiceGrid, type ChoiceOption } from '../../ui/ChoiceGrid';
-import { switchColors, switchStyles } from '../../ui/kitStyles';
+import { useKitStyles } from '../../ui/kitStyles';
 import { PrimaryButton } from '../../ui/PrimaryButton';
 import { Section } from '../../ui/Section';
 import { Sheet } from '../../ui/Sheet';
-import { colors } from '../../ui/theme';
+import { themedStyles } from '../../ui/theme';
 import { type TagOption, TagFilterRows } from './TagFilterRows';
 
-const PLAYER_OPTIONS: ChoiceOption<number>[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({
+const PLAYER_OPTIONS: ChoiceOption<number>[] = Array.from({ length: PLAYERS_OR_MORE }, (_, i) => i + 1).map((n) => ({
   value: n,
-  label: n === 10 ? '10+' : String(n),
+  label: n === PLAYERS_OR_MORE ? `${n}+` : String(n),
 }));
 const DURATION_OPTIONS: ChoiceOption<DurationKey>[] = DURATION_BUCKETS.map(({ key, label, hint }) => ({
   value: key,
@@ -41,6 +41,8 @@ type Props = {
 };
 
 export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, resultCount, onOpenSettings }: Props) {
+  const styles = useStyles();
+  const kit = useKitStyles();
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) => onChange({ ...filters, [key]: value });
   /** Choix unique : un second tap sur la valeur active la désélectionne. */
   const pick = (key: 'players' | 'youngestAge', value: number) => set(key, filters[key] === value ? null : value);
@@ -58,7 +60,7 @@ export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, r
       title="Filtres"
       action={hasCriteria ? { label: 'Réinitialiser', onPress: () => onChange(clearCriteria(filters)) } : undefined}
     >
-      <Section title="Nombre de joueurs" aside={players === null ? ANY : `${players} joueur${players > 1 ? 's' : ''}`}>
+      <Section title="Nombre de joueurs" aside={players === null ? ANY : playersLabel(players)}>
         <ChoiceGrid
           label="Nombre de joueurs"
           options={PLAYER_OPTIONS}
@@ -112,8 +114,8 @@ export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, r
         description="Les afficher avec les jeux de base"
         value={filters.includeExpansions}
         onChange={(v) => set('includeExpansions', v)}
-        colors={switchColors}
-        styles={switchStyles}
+        colors={kit.switchColors}
+        styles={kit.switchStyles}
       />
 
       <PrimaryButton
@@ -124,7 +126,7 @@ export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, r
   );
 }
 
-const styles = StyleSheet.create({
-  hint: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  link: { color: colors.primary, fontWeight: '600' },
-});
+const useStyles = themedStyles((c) => ({
+  hint: { color: c.muted, fontSize: 13, lineHeight: 19 },
+  link: { color: c.primary, fontWeight: '600' },
+}));

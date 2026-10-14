@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { selectFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
+import { Pressable, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from './theme';
+import { radius, spacing, themedStyles } from './theme';
 
 export type ChoiceOption<T> = { value: T; label: string; hint?: string };
 
@@ -25,6 +26,7 @@ export function ChoiceGrid<T extends string | number>({
   label,
   multiple = false,
 }: Props<T>) {
+  const styles = useStyles();
   const rows: ChoiceOption<T>[][] = [];
   for (let i = 0; i < options.length; i += columns) rows.push(options.slice(i, i + columns));
 
@@ -37,7 +39,10 @@ export function ChoiceGrid<T extends string | number>({
             return (
               <Pressable
                 key={String(option.value)}
-                onPress={() => onToggle(option.value)}
+                onPress={() => {
+                  selectFeedback();
+                  onToggle(option.value);
+                }}
                 accessibilityRole={multiple ? 'checkbox' : 'radio'}
                 accessibilityState={{ checked }}
                 accessibilityLabel={option.hint ? `${option.label}, ${option.hint}` : option.label}
@@ -58,7 +63,7 @@ export function ChoiceGrid<T extends string | number>({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   grid: { gap: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.sm },
   tile: {
@@ -68,16 +73,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: c.border,
+    backgroundColor: c.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   spacer: { flex: 1 },
-  checked: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checked: { backgroundColor: c.primary, borderColor: c.primary },
   pressed: { opacity: 0.7 },
-  label: { fontSize: 16, fontWeight: '700', color: colors.text },
-  checkedText: { color: colors.onPrimary },
-  hint: { fontSize: 12, color: colors.muted, marginTop: 1 },
-  checkedHint: { color: colors.primarySoft },
-});
+  label: { fontSize: 16, fontWeight: '700', color: c.text },
+  checkedText: { color: c.onPrimary },
+  hint: { fontSize: 12, color: c.muted, marginTop: 1, textAlign: 'center' },
+  checkedHint: { color: c.primarySoft },
+}));

@@ -1,11 +1,11 @@
 import { BottomSheet } from '@forthtilliath/react-native-kit/components/overlay/BottomSheet';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from './Icon';
-import { sheetStyles } from './kitStyles';
-import { colors, radius, spacing } from './theme';
+import { useKitStyles } from './kitStyles';
+import { radius, spacing, themedStyles, useColors } from './theme';
 
 type Props = {
   visible: boolean;
@@ -21,9 +21,12 @@ type Props = {
 /** BottomSheet de la lib, avec poignée, titre, action et bouton de fermeture. */
 export function Sheet({ visible, onClose, title, subtitle, action, children }: Props) {
   const { bottom } = useSafeAreaInsets();
+  const c = useColors();
+  const styles = useStyles();
+  const kit = useKitStyles();
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} bottomInset={bottom} styles={sheetStyles}>
+    <BottomSheet visible={visible} onClose={onClose} bottomInset={bottom} styles={kit.sheet}>
       <View style={styles.handle} />
       <View style={styles.header}>
         <View style={styles.titles}>
@@ -33,7 +36,7 @@ export function Sheet({ visible, onClose, title, subtitle, action, children }: P
           {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
         </View>
         {action && (
-          <Pressable onPress={action.onPress} accessibilityRole="button" hitSlop={8}>
+          <Pressable onPress={action.onPress} accessibilityRole="button" hitSlop={8} style={styles.actionButton}>
             <Text style={styles.action}>{action.label}</Text>
           </Pressable>
         )}
@@ -44,7 +47,7 @@ export function Sheet({ visible, onClose, title, subtitle, action, children }: P
           hitSlop={8}
           style={styles.close}
         >
-          <Icon name="close" size={20} color={colors.text} />
+          <Icon name="close" size={20} color={c.text} />
         </Pressable>
       </View>
       <View style={styles.body}>{children}</View>
@@ -52,13 +55,13 @@ export function Sheet({ visible, onClose, title, subtitle, action, children }: P
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   handle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: radius.pill,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     marginTop: spacing.sm,
   },
   header: {
@@ -70,16 +73,17 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   titles: { flex: 1, gap: 2 },
-  title: { fontSize: 20, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 13, color: colors.muted },
-  action: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  title: { fontSize: 20, fontWeight: '800', color: c.text },
+  subtitle: { fontSize: 13, color: c.muted },
+  actionButton: { minHeight: 32, justifyContent: 'center' },
+  action: { fontSize: 14, fontWeight: '600', color: c.primary },
   close: {
     width: 32,
     height: 32,
     borderRadius: radius.pill,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: c.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   body: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.lg },
-});
+}));
