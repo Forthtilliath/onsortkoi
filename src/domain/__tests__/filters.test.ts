@@ -1,4 +1,4 @@
-import { applyFilters, collectTags, countActiveFilters, EMPTY_FILTERS, type Filters } from '../filters';
+import { applyFilters, collectTags, EMPTY_FILTERS, type Filters } from '../filters';
 import type { Game } from '../types';
 
 const game = (overrides: Partial<Game>): Game => ({
@@ -45,18 +45,12 @@ describe('applyFilters', () => {
     expect(filter({ players: 4 })).toEqual([3, 2, 1]);
   });
 
-  it('garde les jeux faisables dans le temps disponible (durée mini)', () => {
-    expect(filter({ maxDuration: 30 })).toEqual([2]);
-    expect(filter({ maxDuration: 60 })).toEqual([3, 2, 1]);
-  });
-
-  it('garde les jeux qui peuvent durer au moins le temps voulu (durée maxi)', () => {
-    expect(filter({ minDuration: 45 })).toEqual([3, 1]);
-    expect(filter({ minDuration: 90 })).toEqual([1]);
-  });
-
-  it('combine durée minimum et maximum', () => {
-    expect(filter({ minDuration: 30, maxDuration: 60 })).toEqual([3, 1]);
+  it('filtre par tranches de durée', () => {
+    expect(filter({ durations: ['express'] })).toEqual([2]);
+    expect(filter({ durations: ['short'] })).toEqual([3, 1]);
+    expect(filter({ durations: ['medium'] })).toEqual([1]);
+    expect(filter({ durations: ['long'] })).toEqual([]);
+    expect(filter({ durations: ['express', 'medium'] })).toEqual([2, 1]);
   });
 
   it("garde les jeux adaptés à l'âge du plus jeune", () => {
@@ -70,8 +64,8 @@ describe('applyFilters', () => {
   });
 
   it('combine tous les critères', () => {
-    expect(filter({ players: 3, maxDuration: 45, youngestAge: 10 })).toEqual([3, 2]);
-    expect(filter({ players: 5, maxDuration: 45, youngestAge: 10 })).toEqual([2]);
+    expect(filter({ players: 3, durations: ['express', 'short'], youngestAge: 10 })).toEqual([3, 2]);
+    expect(filter({ players: 5, durations: ['express', 'short'], youngestAge: 10 })).toEqual([2]);
   });
 });
 
@@ -81,12 +75,5 @@ describe('collectTags', () => {
       { name: 'Coopératif', count: 1 },
       { name: 'Dés', count: 1 },
     ]);
-  });
-});
-
-describe('countActiveFilters', () => {
-  it('compte chaque critère actif et chaque tag', () => {
-    expect(countActiveFilters(EMPTY_FILTERS)).toBe(0);
-    expect(countActiveFilters({ ...EMPTY_FILTERS, players: 2, tags: { ...EMPTY_FILTERS.tags, themes: ['a', 'b'] } })).toBe(3);
   });
 });
