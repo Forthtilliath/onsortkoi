@@ -11,7 +11,8 @@ Présentation fonctionnelle de l'app : [README.md](README.md).
 | Validation | [zod 4](https://zod.dev), messages en français (`z.locales.fr()`) |
 | Stockage | `@react-native-async-storage/async-storage` |
 | Fichiers | `expo-file-system` (sélecteur + lecture), `expo-sharing` (menu de partage) |
-| Composants partagés | `@forthtilliath/react-native-kit` (`BottomSheet`, `SwitchRow`, `confirmDestructive`) |
+| Composants partagés | `@forthtilliath/react-native-kit` (`BottomSheet`, `SwitchRow`, `ThemeToggle`, `ThemePreferenceProvider`, retours haptiques, `confirmDestructive`) |
+| Thème | clair / sombre / système (`userInterfaceStyle: automatic`, `expo-system-ui`), écran de démarrage `expo-splash-screen` |
 | Sauvegarde | `@forthtilliath/expo-backup` (Drive `appDataFolder`, fichier, annulation) + `@forthtilliath/expo-backup-ui` (`BackupScreen`) |
 | Tests | Jest 29 + `jest-expo` |
 | Cible | **Android uniquement**, identifiant `com.forthtilliath.onsortkoi` |
@@ -60,7 +61,8 @@ src/
 │   ├── gameSchema.ts    schéma zod d'un Game, de la collection et des réglages enregistrés
 │   ├── backup.ts        format de sauvegarde versionné (création, lecture, nom de fichier)
 │   ├── collectionFile.ts accueil : reconnaît un export MyLudo ou une sauvegarde
-│   ├── filters.ts       Filters, filtrage, tri, comptage des tags (facettes)
+│   ├── filters.ts       Filters, filtrage (index de recherche), comptage des tags (facettes)
+│   ├── listing.ts       tri de la liste, en-têtes par lettre, tirage au sort
 │   ├── durations.ts     tranches de durée et test de chevauchement
 │   ├── activeFilters.ts critères actifs → puces { label, clear }
 │   ├── settings.ts      réglages, tags proposés, nettoyage des filtres
@@ -77,7 +79,7 @@ src/
 ├── components/          écrans et panneaux propres à l'app
 │   ├── filters/         SearchBar, FilterSheet, TagFilterRows, ActiveFilterBar
 │   └── game/            GameCard, GameTile, GameSheet, libellés
-└── ui/                  briques génériques : thème, Sheet, Chip, ChoiceGrid, boutons…
+└── ui/                  briques génériques : thème (palettes, themedStyles), Sheet, Chip, ChoiceGrid, Toast, boutons…
 ```
 
 Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures, testables sans mock), les accès natifs dans les modules à la racine de `src/`, l'état React dans les hooks `use*`. Pas de fichier de plus de 300 lignes.
@@ -85,7 +87,7 @@ Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures
 ### Flux de données
 
 1. **Import** : `pickJsonText` (sélecteur système, fichier `content://` lu directement) → `importCollection` (zod) → `saveCollection` → état de `useCollection`.
-2. **Filtrage** : `useGameFilters` combine collection, filtres et réglages. `applyFilters` trie par titre (`localeCompare` en français). `facetTags` compte, pour chaque tag, les jeux retenus par les *autres* critères : c'est le nombre affiché à côté du tag.
+2. **Filtrage** : `useGameFilters` combine collection, filtres, tri et réglages. Par collection, il calcule une fois l'index de recherche (titre, sous-titre, auteurs normalisés) et la liste triée (`sortGames`, un seul `Intl.Collator`) ; `filterGames` filtre ensuite en gardant l'ordre. La recherche passe par `useDeferredValue` pour que la saisie reste fluide. `facetTags` compte, pour chaque tag, les jeux retenus par les *autres* critères : c'est le nombre affiché à côté du tag ; ces compteurs ne sont recalculés que panneau des filtres ouvert.
 3. **Réglages** : un changement passe par `pruneFor`, qui retire des filtres actifs les tags qui ne sont plus proposés. Un tag choisi depuis la fiche d'un jeu reste actif même s'il n'est pas proposé dans les filtres.
 4. **Sauvegarde** : `backup` ([backupManager.ts](src/backupManager.ts)), créé avec `createBackupManager`. `serialize` = `createBackup`, `parse` = `readBackup` (zod, le message d'erreur est affiché tel quel), `apply` = `saveBackup` (un seul `multiSet`) puis mise à jour de l'état via `setBackupAppliedListener`. `useCollection` et `useSettings` appellent `backup.notifyDataChanged()` après chaque écriture : envoi sur Drive 3 s plus tard, ou au passage en arrière-plan. `collect` lève une erreur tant qu'aucune collection n'existe : rien n'est envoyé.
 5. **Restauration Drive depuis l'accueil** ([useFirstImport.ts](src/useFirstImport.ts)) : `connectCloud` ; en cas de sauvegarde existante (`conflict`), `resolveConflict(…, 'cloud')` la restaure. Sur un téléphone vide, `hasLocalData` (dans [backupManager.ts](src/backupManager.ts)) évite la copie de sécurité des données locales, que `collect` ne peut pas fournir.
@@ -97,6 +99,10 @@ Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures
 - Durées : un jeu correspond à une tranche si sa plage la chevauche (bornes `(min, max]`).
 - Âge : le jeu est gardé si son âge conseillé est inférieur ou égal à l'âge du plus jeune ; un jeu sans âge est exclu dès que le filtre est actif (idem pour joueurs et durée).
 
+## Thème
+
+Palettes claire et sombre dans [theme.ts](src/ui/theme.ts) (contrastes WCAG vérifiés : texte ≥ 4,5:1, contours de champs et icônes ≥ 3:1). Un composant lit les couleurs avec `useColors()` et ses styles avec un hook créé par `themedStyles((c) => ({ … }))` (une feuille par palette, mise en cache). Les composants des libs sont habillés par `useKitStyles()` ([kitStyles.ts](src/ui/kitStyles.ts)) : leurs couleurs par défaut sont claires, chaque texte et fond y est redéfini. Le choix clair / sombre / système est enregistré sous `onsortkoi:theme:v1` (zod, hors des sauvegardes).
+
 ## Sécurité des données
 
 Toute donnée venant de l'extérieur ou relue depuis le stockage est validée par zod avant usage :
@@ -105,12 +111,14 @@ Toute donnée venant de l'extérieur ou relue depuis le stockage est validée pa
 | --- | --- | --- |
 | Export MyLudo | `importSchema.ts` (par entrée) | fichier entier rejeté, message localisé (n° de jeu, titre, champ) |
 | Sauvegarde | en-tête `app` + `version`, puis `backupSchema` | fichier entier rejeté ; version différente refusée |
-| AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `updateCheckSchema` | donnée ignorée (collection absente, réglages par défaut) |
+| AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `updateCheckSchema`, enum du thème | donnée ignorée (collection absente, réglages et thème par défaut) |
 
+- Taille du fichier vérifiée avant lecture (`size` du sélecteur, sinon celle du descripteur ouvert) ; la longueur lue est revérifiée pour un fournisseur qui ne donne aucune taille.
 - Bornes : 10 Mo par fichier, 5 000 jeux, 100 tags par jeu, 100 caractères par tag, 200 par titre, joueurs ≤ 100, durée ≤ 24 h, âge ≤ 99, notes 0–10, identifiants uniques.
 - zod supprime les clés inconnues : les données personnelles de l'export (prix, propriétaire, commentaire…) ne sont jamais enregistrées.
 - `gameSchema` reprend les mêmes bornes que l'import : une collection restaurée ne peut pas contenir ce qu'un import aurait refusé.
-- Seule permission Android ajoutée : `REQUEST_INSTALL_PACKAGES` (mises à jour intégrées) ; `READ/WRITE_EXTERNAL_STORAGE`, `SYSTEM_ALERT_WINDOW`, `RECORD_AUDIO`, `USE_BIOMETRIC` et `USE_FINGERPRINT` sont dans `blockedPermissions`.
+- `android.allowBackup: false` : les données ne partent pas dans la sauvegarde automatique d'Android, seulement dans les sauvegardes choisies (Drive, fichier).
+- Permissions Android ajoutées : `REQUEST_INSTALL_PACKAGES` (mises à jour intégrées) et `VIBRATE` (retours haptiques, `expo-haptics`) ; `READ/WRITE_EXTERNAL_STORAGE`, `SYSTEM_ALERT_WINDOW`, `RECORD_AUDIO`, `USE_BIOMETRIC` et `USE_FINGERPRINT` sont dans `blockedPermissions`.
 
 Tout nouvel import (nouveau format, nouveau champ) suit le même modèle : schéma zod par entrée, rejet total à la première anomalie, message affichable.
 
@@ -125,6 +133,7 @@ L'APK est construit en local et publié dans les [releases GitHub](https://githu
 - `withReleaseSigning` (préfixe `ONSORTKOI`) : la release est signée avec la clé d'upload de l'app, **jamais** avec le `debug.keystore` public de React Native. Sans la clé, `assembleRelease` échoue (« Keystore file not set »).
 - `withAndroidAbis` : code natif ARM uniquement (pas d'x86, qui ne sert qu'aux émulateurs).
 - `withShortCxxPath` : évite le dépassement de 260 caractères des chemins CMake sous Windows.
+- `expo-build-properties` : R8 (`enableMinifyInReleaseBuilds`) et suppression des ressources inutilisées (`enableShrinkResourcesInReleaseBuilds`) en release.
 
 La clé, hors du dépôt, est `C:/Users/Forth/keys/onsortkoi-upload.keystore` (alias `onsortkoi-upload`, PKCS12, SHA-1 `3B:26:48:D1:26:D4:0A:3B:BE:70:1D:AE:AD:08:38:62:63:F1:FD:4C`, SHA-256 `7D:64:4F:25:…:56:C7:40:95`). Ses identifiants sont dans `~/.gradle/gradle.properties` :
 
