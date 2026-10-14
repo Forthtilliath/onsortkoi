@@ -1,5 +1,5 @@
 import { DURATION_BUCKETS } from './durations';
-import { EMPTY_FILTERS, type Filters } from './filters';
+import { EMPTY_FILTERS, type Filters, playersLabel } from './filters';
 import type { TagGroup } from './types';
 
 export type ActiveFilter = {
@@ -22,7 +22,7 @@ export function describeActiveFilters(filters: Filters): ActiveFilter[] {
   if (players !== null) {
     active.push({
       key: 'players',
-      label: `${players} joueur${players > 1 ? 's' : ''}`,
+      label: playersLabel(players),
       clear: (f) => ({ ...f, players: null }),
     });
   }

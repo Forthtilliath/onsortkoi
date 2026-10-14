@@ -7,6 +7,7 @@ import {
   type Filters,
   filterGames,
   filtersForTag,
+  playersLabel,
 } from '../filters';
 import type { Game } from '../types';
 
@@ -52,6 +53,19 @@ describe('applyFilters', () => {
     expect(filter({ players: 1 })).toEqual([1]);
     expect(filter({ players: 8 })).toEqual([2]);
     expect(filter({ players: 4 })).toEqual([3, 2, 1]);
+  });
+
+  it('« 10+ » garde les jeux qui acceptent 10 joueurs ou plus, même à partir de 12', () => {
+    const party = [
+      ...games,
+      game({ id: 8, title: 'Grand groupe', players: { min: 12, max: 20 } }),
+      game({ id: 9, title: 'Huit max', players: { min: 3, max: 8 } }),
+      game({ id: 10, title: 'Dix pile', players: { min: 4, max: 10 } }),
+    ];
+    const ids = applyFilters(party, { ...EMPTY_FILTERS, players: 10 }).map((g) => g.id);
+    expect(ids).toEqual([10, 2, 8]);
+    expect(playersLabel(10)).toBe('10+ joueurs');
+    expect(playersLabel(1)).toBe('1 joueur');
   });
 
   it('filtre par tranches de durée', () => {
