@@ -1,12 +1,11 @@
+import { type DurationKey, matchesDurations } from './durations';
 import type { Game, TagGroup } from './types';
 
 export type Filters = {
   query: string;
   players: number | null;
-  /** Durée souhaitée au moins, en minutes : la partie peut durer ce temps (durée maxi du jeu). */
-  minDuration: number | null;
-  /** Durée disponible au plus, en minutes : le jeu peut se jouer dans ce temps (durée mini du jeu). */
-  maxDuration: number | null;
+  /** Tranches de durée acceptées (OU) ; vide = toutes. */
+  durations: DurationKey[];
   /** Âge du plus jeune joueur : l'âge conseillé du jeu ne doit pas le dépasser. */
   youngestAge: number | null;
   includeExpansions: boolean;
@@ -16,8 +15,7 @@ export type Filters = {
 export const EMPTY_FILTERS: Filters = {
   query: '',
   players: null,
-  minDuration: null,
-  maxDuration: null,
+  durations: [],
   youngestAge: null,
   includeExpansions: false,
   tags: { categories: [], themes: [], mechanisms: [] },
@@ -50,15 +48,12 @@ export function matches(game: Game, filters: Filters): boolean {
   const query = normalize(filters.query);
   if (query && !normalize(`${game.title} ${game.subtitle}`).includes(query)) return false;
 
-  const { players, minDuration, maxDuration, youngestAge } = filters;
+  const { players, youngestAge } = filters;
   if (players !== null) {
     const range = game.players;
     if (!range || players < range.min || (range.max !== null && players > range.max)) return false;
   }
-  if (minDuration !== null && (!game.duration || (game.duration.max !== null && game.duration.max < minDuration))) {
-    return false;
-  }
-  if (maxDuration !== null && (!game.duration || game.duration.min > maxDuration)) return false;
+  if (!matchesDurations(game.duration, filters.durations)) return false;
   if (youngestAge !== null && (game.age === null || game.age > youngestAge)) return false;
 
   return matchesTags(game, filters.tags);
@@ -68,19 +63,6 @@ export function applyFilters(games: Game[], filters: Filters): Game[] {
   return games
     .filter((game) => matches(game, filters))
     .sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
-}
-
-export function countActiveFilters(filters: Filters): number {
-  const tagCount = Object.values(filters.tags).reduce((sum, list) => sum + list.length, 0);
-  return (
-    (filters.query.trim() ? 1 : 0) +
-    (filters.players !== null ? 1 : 0) +
-    (filters.minDuration !== null ? 1 : 0) +
-    (filters.maxDuration !== null ? 1 : 0) +
-    (filters.youngestAge !== null ? 1 : 0) +
-    (filters.includeExpansions ? 1 : 0) +
-    tagCount
-  );
 }
 
 export type TagCount = { name: string; count: number };
