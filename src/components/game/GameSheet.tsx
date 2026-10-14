@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { Game } from '../../domain/types';
+import type { Game, TagGroup } from '../../domain/types';
 import { Icon } from '../../ui/Icon';
 import { Section } from '../../ui/Section';
 import { Sheet } from '../../ui/Sheet';
@@ -12,17 +12,27 @@ type Props = {
   game: Game | null;
   visible: boolean;
   onClose: () => void;
+  /** Affiche tous les jeux portant ce tag. */
+  onSelectTag: (group: TagGroup, tag: string) => void;
 };
 
-function Tags({ title, tags }: { title: string; tags: string[] }) {
+type TagsProps = { title: string; group: TagGroup; tags: string[]; onSelect: Props['onSelectTag'] };
+
+function Tags({ title, group, tags, onSelect }: TagsProps) {
   if (tags.length === 0) return null;
   return (
     <Section title={title}>
       <View style={styles.tags}>
         {tags.map((tag) => (
-          <Text key={tag} style={styles.tag}>
-            {tag}
-          </Text>
+          <Pressable
+            key={tag}
+            onPress={() => onSelect(group, tag)}
+            accessibilityRole="button"
+            accessibilityHint="Affiche tous les jeux de la collection avec ce tag"
+            style={({ pressed }) => [styles.tag, pressed && styles.pressed]}
+          >
+            <Text style={styles.tagLabel}>{tag}</Text>
+          </Pressable>
         ))}
       </View>
     </Section>
@@ -30,7 +40,7 @@ function Tags({ title, tags }: { title: string; tags: string[] }) {
 }
 
 /** Fiche détaillée d'un jeu. */
-export function GameSheet({ game, visible, onClose }: Props) {
+export function GameSheet({ game, visible, onClose, onSelectTag }: Props) {
   if (!game) return null;
 
   const facts = gameFacts(game);
@@ -71,9 +81,9 @@ export function GameSheet({ game, visible, onClose }: Props) {
         </View>
       )}
 
-      <Tags title="Catégories" tags={game.categories} />
-      <Tags title="Mécanismes" tags={game.mechanisms} />
-      <Tags title="Thèmes" tags={game.themes} />
+      <Tags title="Catégories" group="categories" tags={game.categories} onSelect={onSelectTag} />
+      <Tags title="Mécanismes" group="mechanisms" tags={game.mechanisms} onSelect={onSelectTag} />
+      <Tags title="Thèmes" group="themes" tags={game.themes} onSelect={onSelectTag} />
 
       {credits.length > 0 && <Text style={styles.credits}>{credits.join(' · ')}</Text>}
     </Sheet>
@@ -100,13 +110,12 @@ const styles = StyleSheet.create({
   strong: { fontWeight: '800', color: colors.text },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   tag: {
-    fontSize: 13,
-    color: colors.primary,
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: radius.pill,
-    overflow: 'hidden',
   },
+  pressed: { opacity: 0.6 },
+  tagLabel: { fontSize: 13, color: colors.primary },
   credits: { fontSize: 13, color: colors.muted, lineHeight: 19 },
 });

@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,9 +13,9 @@ import { GameSheet } from './src/components/game/GameSheet';
 import { NoResults } from './src/components/NoResults';
 import { SettingsScreen } from './src/components/SettingsScreen';
 import { clearCriteria } from './src/domain/activeFilters';
-import { isStandalone } from './src/domain/filters';
+import { filtersForTag, isStandalone } from './src/domain/filters';
 import type { Settings } from './src/domain/settings';
-import type { Game } from './src/domain/types';
+import type { Game, TagGroup } from './src/domain/types';
 import { colors, spacing } from './src/ui/theme';
 import { useBackup } from './src/useBackup';
 import { useCollection } from './src/useCollection';
@@ -40,6 +40,13 @@ function Main() {
     setPanel('game');
   }, []);
   const close = () => setPanel(null);
+
+  const listRef = useRef<FlatList<Game>>(null);
+  const showTag = (group: TagGroup, tag: string) => {
+    setFilters(filtersForTag(filters, group, tag));
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    close();
+  };
 
   const changeSettings = (next: Settings) => {
     updateSettings(next);
@@ -83,6 +90,7 @@ function Main() {
           </View>
 
           <FlatList
+            ref={listRef}
             data={results}
             keyExtractor={(game) => String(game.id)}
             renderItem={({ item }) => <GameCard game={item} onPress={openGame} />}
@@ -101,7 +109,7 @@ function Main() {
             resultCount={results.length}
             onOpenSettings={() => setPanel('settings')}
           />
-          <GameSheet game={selectedGame} visible={panel === 'game'} onClose={close} />
+          <GameSheet game={selectedGame} visible={panel === 'game'} onClose={close} onSelectTag={showTag} />
           <SettingsScreen
             visible={panel === 'settings'}
             settings={settings}
