@@ -4,11 +4,13 @@ import type { Backup } from './domain/backup';
 import { settingsSchema, storedCollectionSchema } from './domain/gameSchema';
 import { DEFAULT_SETTINGS, type Settings } from './domain/settings';
 import type { Game, StoredCollection } from './domain/types';
+import { EMPTY_UPDATE_CHECK, parseUpdateCheck, type UpdateCheck } from './domain/updateCheck';
 
 export type { StoredCollection } from './domain/types';
 
 const KEY = 'onsortkoi:collection:v1';
 const SETTINGS_KEY = 'onsortkoi:settings:v1';
+const UPDATE_CHECK_KEY = 'onsortkoi:update-check:v1';
 
 // Revalide ce qui a été enregistré : une donnée corrompue est ignorée plutôt que d'être affichée.
 export async function loadCollection(): Promise<StoredCollection | null> {
@@ -41,6 +43,18 @@ export async function loadSettings(): Promise<Settings> {
 
 export async function saveSettings(settings: Settings): Promise<void> {
   await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+export async function loadUpdateCheck(): Promise<UpdateCheck> {
+  try {
+    return parseUpdateCheck(await AsyncStorage.getItem(UPDATE_CHECK_KEY));
+  } catch {
+    return EMPTY_UPDATE_CHECK;
+  }
+}
+
+export async function saveUpdateCheck(check: UpdateCheck): Promise<void> {
+  await AsyncStorage.setItem(UPDATE_CHECK_KEY, JSON.stringify(check));
 }
 
 /** Enregistre une sauvegarde validée : collection et réglages en une seule écriture. */
