@@ -44,7 +44,16 @@
       "@forthtilliath/expo-config-plugins/withShortCxxPath",
       "@react-native-google-signin/google-signin/app.plugin.js",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ]
   }
 }
