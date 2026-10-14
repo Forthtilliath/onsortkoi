@@ -27,7 +27,7 @@ Tu utilisais déjà Onsortkoi ? **Restaurer depuis Google Drive** récupère ta 
 
 ### Recherche
 
-La barre de recherche filtre par titre et sous-titre, sans tenir compte des accents ni des majuscules.
+La barre de recherche filtre par titre, sous-titre et auteur, sans tenir compte des accents ni des majuscules.
 
 ### Filtres
 
@@ -35,7 +35,7 @@ Le bouton à droite de la recherche ouvre le panneau des filtres. Un badge indiq
 
 | Filtre | Fonctionnement |
 | --- | --- |
-| **Nombre de joueurs** | De 1 à 10+. Garde les jeux jouables à ce nombre. |
+| **Nombre de joueurs** | De 1 à 10+. Garde les jeux jouables à ce nombre ; **10+** garde ceux qui acceptent 10 joueurs ou plus. |
 | **Durée de partie** | Express (30 min max), Courte (30 min à 1 h), Moyenne (1 h à 2 h), Longue (plus de 2 h). Plusieurs choix possibles : un jeu de 45 à 90 min apparaît en Courte comme en Moyenne. |
 | **Âge du plus jeune** | 4 à 14 ans. Garde les jeux dont l'âge conseillé ne dépasse pas cet âge. |
 | **Extensions et accessoires** | Masqués par défaut ; un interrupteur les affiche. |
@@ -47,6 +47,14 @@ Sous la recherche, chaque critère actif s'affiche en puce : un tap sur la puce 
 
 Un second tap sur une valeur déjà choisie (nombre de joueurs, âge) la désélectionne.
 
+### Tri
+
+À droite du nombre de jeux, le bouton de tri range la liste par **titre** (de A à Z, avec une lettre repère qui reste en haut pendant le défilement), **ma note**, **note MyLudo**, **durée** (la plus courte d'abord) ou **année d'édition** (la plus récente d'abord). Les jeux sans la valeur triée passent en fin de liste.
+
+### Tirer au sort
+
+Le bouton **Au hasard**, en bas à droite, choisit un jeu parmi ceux affichés (donc selon les filtres en cours) et ouvre sa fiche. **Relancer** en tire un autre.
+
 ### Fiche d'un jeu
 
 Un tap sur un jeu ouvre sa fiche : joueurs, durée, âge, ta note et la moyenne MyLudo, catégories, mécanismes, thèmes, auteurs et année d'édition.
@@ -57,6 +65,7 @@ Un tap sur un tag de la fiche affiche tous les jeux de ta collection qui le port
 
 L'icône en haut à droite ouvre les réglages.
 
+- **Apparence** : thème clair, sombre, ou celui du téléphone.
 - **Filtres proposés** : les catégories sont toutes proposées (désactivables). Les mécanismes et thèmes sont souvent très nombreux : coche seulement ceux qui t'intéressent pour qu'ils apparaissent dans le panneau des filtres.
 - **Collection** : nombre de jeux, date d'import, et **Réimporter un export MyLudo** pour mettre à jour la collection après des achats. L'app demande confirmation avant de remplacer la collection.
 - **Sauvegarde** : voir ci-dessous.
@@ -79,6 +88,7 @@ Sur un nouveau téléphone, **Restaurer depuis Google Drive** (écran d'accueil)
 
 - **Réseau seulement pour la sauvegarde** : rien n'est envoyé tant que tu ne connectes pas Google Drive. Une fois connecté, seule ta collection et tes réglages partent vers ton propre Drive (accès limité au dossier privé de l'app).
 - **Aucune permission sensible** demandée ; l'accès au stockage, au micro et à la superposition d'écran est explicitement bloqué.
+- **Pas de sauvegarde Android automatique** : seules les sauvegardes que tu actives (Drive, fichier) copient tes données hors du téléphone.
 - **Données minimales** : seuls les champs utiles sont gardés de l'export MyLudo. Prix d'achat, propriétaire, commentaires et autres données personnelles sont ignorés à l'import.
 - **Fichiers vérifiés** : chaque jeu d'un export ou d'une sauvegarde est contrôlé (types, bornes, longueurs ; 10 Mo et 5 000 jeux maximum). À la première anomalie, le fichier entier est refusé avec un message qui indique le jeu et le champ en cause, et **rien n'est modifié**.
 - Une sauvegarde créée par une autre version de l'app est refusée plutôt que mal interprétée.
