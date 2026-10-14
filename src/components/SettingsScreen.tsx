@@ -2,21 +2,23 @@ import { BackupScreen } from '@forthtilliath/expo-backup-ui';
 import { compareVersions } from '@forthtilliath/expo-release-updates/compareVersions';
 import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 import { UpdateSettingsScreen } from '@forthtilliath/react-native-kit/components/settings/UpdateSettingsScreen';
+import { useThemePreference } from '@forthtilliath/react-native-kit/components/theme/themePreferenceContext';
+import { ThemeToggle } from '@forthtilliath/react-native-kit/components/theme/ThemeToggle';
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { backup } from '../backupManager';
 import { collectTags } from '../domain/filters';
 import type { Settings } from '../domain/settings';
-import type { Game } from '../domain/types';
 import type { StoredCollection } from '../storage';
 import { Icon } from '../ui/Icon';
 import { IconButton } from '../ui/IconButton';
-import { backupScreenStyles, switchColors, updateScreenStyles } from '../ui/kitStyles';
+import { useKitStyles } from '../ui/kitStyles';
 import { PrimaryButton } from '../ui/PrimaryButton';
 import { Section } from '../ui/Section';
-import { colors, radius, spacing } from '../ui/theme';
+import { radius, spacing, themedStyles, useColors } from '../ui/theme';
+import { ToastHost } from '../ui/Toast';
 import { checkForUpdate, currentVersion, fetchHistory, installApk } from '../updates';
 import { TagChecklist } from './TagChecklist';
 
@@ -39,23 +41,19 @@ type Props = {
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR');
 
-export function SettingsScreen({
-  visible,
-  settings,
-  onChange,
-  collection,
-  onReimport,
-  importing,
-  onClose,
-}: Props) {
+export function SettingsScreen({ visible, settings, onChange, collection, onReimport, importing, onClose }: Props) {
+  const c = useColors();
+  const styles = useStyles();
+  const kit = useKitStyles();
+  const theme = useThemePreference();
   const [editing, setEditing] = useState<ChoiceGroup | null>(null);
-  const games: Game[] = collection.games;
+  const { games } = collection;
 
   const tagsByGroup = useMemo(
     () => ({ mechanisms: collectTags(games, 'mechanisms'), themes: collectTags(games, 'themes') }),
     [games],
   );
-  const editedChoice = CHOICES.find((c) => c.key === editing);
+  const editedChoice = CHOICES.find((choice) => choice.key === editing);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -75,21 +73,23 @@ export function SettingsScreen({
                 description="Toutes les catégories de ta collection"
                 value={settings.showCategories}
                 onChange={(showCategories) => onChange({ ...settings, showCategories })}
-                colors={switchColors}
+                colors={kit.switchColors}
                 styles={{ label: styles.switchLabel, description: styles.hint }}
               />
               {CHOICES.map(({ key, label }) => {
                 const count = settings[key].length;
+                const value = count ? `${count} choisi${count > 1 ? 's' : ''}` : 'Aucun';
                 return (
                   <Pressable
                     key={key}
                     onPress={() => setEditing(key)}
                     accessibilityRole="button"
+                    accessibilityLabel={`${label} : ${value}`}
                     style={({ pressed }) => [styles.row, styles.separator, pressed && styles.pressed]}
                   >
                     <Text style={styles.rowLabel}>{label}</Text>
-                    <Text style={styles.rowValue}>{count ? `${count} choisi${count > 1 ? 's' : ''}` : 'Aucun'}</Text>
-                    <Icon name="chevron-forward" size={18} color={colors.muted} />
+                    <Text style={styles.rowValue}>{value}</Text>
+                    <Icon name="chevron-forward" size={18} color={c.muted} />
                   </Pressable>
                 );
               })}
@@ -99,6 +99,10 @@ export function SettingsScreen({
             </Text>
           </Section>
 
+          <Section title="Apparence">
+            <ThemeToggle value={theme.preference} onChange={theme.setPreference} styles={kit.themeToggle} />
+          </Section>
+
           <Section title="Collection">
             <View style={[styles.card, styles.padded]}>
               <Text style={styles.rowLabel}>
@@ -106,7 +110,7 @@ export function SettingsScreen({
               </Text>
               <PrimaryButton
                 label={importing ? 'Import en cours…' : 'Réimporter un export MyLudo'}
-                icon="cloud-download-outline"
+                icon="document-outline"
                 onPress={onReimport}
                 disabled={importing}
                 outline
@@ -118,7 +122,7 @@ export function SettingsScreen({
             <BackupScreen
               manager={backup}
               describeBackup={(data) => `${data.collection.games.length} jeux`}
-              styles={backupScreenStyles}
+              styles={kit.backup}
             />
           </Section>
 
@@ -129,7 +133,7 @@ export function SettingsScreen({
               compareVersions={compareVersions}
               downloadAndInstallApk={installApk}
               fetchReleaseHistory={fetchHistory}
-              styles={updateScreenStyles}
+              styles={kit.updateScreen}
             />
           </Section>
         </ScrollView>
@@ -144,13 +148,14 @@ export function SettingsScreen({
             onClose={() => setEditing(null)}
           />
         )}
+        <ToastHost />
       </SafeAreaView>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+const useStyles = themedStyles((c) => ({
+  screen: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -158,13 +163,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  title: { fontSize: 24, fontWeight: '800', color: c.text },
   content: { padding: spacing.lg, gap: spacing.xl },
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     overflow: 'hidden',
   },
   padded: { padding: spacing.lg, gap: spacing.md },
@@ -174,11 +179,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     minHeight: 52,
     paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
-  separator: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  pressed: { backgroundColor: colors.primarySoft },
-  rowLabel: { fontSize: 15, color: colors.text, flex: 1 },
-  switchLabel: { fontSize: 15, fontWeight: '400', color: colors.text },
-  rowValue: { fontSize: 14, color: colors.primary, fontWeight: '600' },
-  hint: { fontSize: 13, color: colors.muted },
-});
+  separator: { borderTopWidth: 1, borderTopColor: c.border },
+  pressed: { backgroundColor: c.primarySoft },
+  rowLabel: { fontSize: 15, color: c.text, flex: 1 },
+  switchLabel: { fontSize: 15, fontWeight: '400', color: c.text },
+  rowValue: { fontSize: 14, color: c.primary, fontWeight: '600' },
+  hint: { fontSize: 13, color: c.muted },
+}));

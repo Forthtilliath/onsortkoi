@@ -1,10 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type { Game, TagGroup } from '../../domain/types';
 import { Icon } from '../../ui/Icon';
 import { Section } from '../../ui/Section';
 import { Sheet } from '../../ui/Sheet';
-import { colors, radius, spacing } from '../../ui/theme';
+import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
 import { gameFacts, gameSubtitle } from './gameLabels';
 
 type Props = {
@@ -14,11 +14,14 @@ type Props = {
   onClose: () => void;
   /** Affiche tous les jeux portant ce tag. */
   onSelectTag: (group: TagGroup, tag: string) => void;
+  /** Jeu tiré au sort : nombre de jeux du tirage et nouveau tirage. */
+  draw?: { from: number; onReroll: () => void };
 };
 
 type TagsProps = { title: string; group: TagGroup; tags: string[]; onSelect: Props['onSelectTag'] };
 
 function Tags({ title, group, tags, onSelect }: TagsProps) {
+  const styles = useStyles();
   if (tags.length === 0) return null;
   return (
     <Section title={title}>
@@ -40,7 +43,9 @@ function Tags({ title, group, tags, onSelect }: TagsProps) {
 }
 
 /** Fiche détaillée d'un jeu. */
-export function GameSheet({ game, visible, onClose, onSelectTag }: Props) {
+export function GameSheet({ game, visible, onClose, onSelectTag, draw }: Props) {
+  const c = useColors();
+  const styles = useStyles();
   if (!game) return null;
 
   const facts = gameFacts(game);
@@ -50,12 +55,27 @@ export function GameSheet({ game, visible, onClose, onSelectTag }: Props) {
   ].filter(Boolean);
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={game.title} subtitle={gameSubtitle(game) || undefined}>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title={game.title}
+      subtitle={gameSubtitle(game) || undefined}
+      action={draw && draw.from > 1 ? { label: 'Relancer', onPress: draw.onReroll } : undefined}
+    >
+      {draw && (
+        <View style={styles.draw}>
+          <Icon name="dice-outline" size={18} color={c.primary} />
+          <Text style={styles.drawText} accessibilityLiveRegion="polite">
+            Tiré au sort parmi {draw.from} jeu{draw.from > 1 ? 'x' : ''}
+          </Text>
+        </View>
+      )}
+
       {facts.length > 0 && (
         <View style={styles.facts}>
           {facts.map((fact) => (
-            <View key={fact.key} style={styles.fact}>
-              <Icon name={fact.icon} size={20} color={colors.primary} />
+            <View key={fact.key} style={styles.fact} accessible accessibilityLabel={fact.spoken}>
+              <Icon name={fact.icon} size={20} color={c.primary} />
               <Text style={styles.factValue}>{fact.value}</Text>
               <Text style={styles.factLabel}>{fact.label}</Text>
             </View>
@@ -67,7 +87,7 @@ export function GameSheet({ game, visible, onClose, onSelectTag }: Props) {
         <View style={styles.ratings}>
           {game.rating !== null && (
             <View style={styles.rating}>
-              <Icon name="star" size={16} color={colors.star} />
+              <Icon name="star" size={16} color={c.star} />
               <Text style={styles.ratingText}>
                 <Text style={styles.strong}>{game.rating}</Text>/10 · ma note
               </Text>
@@ -90,7 +110,17 @@ export function GameSheet({ game, visible, onClose, onSelectTag }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
+  draw: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: c.primarySoft,
+  },
+  drawText: { flex: 1, fontSize: 14, fontWeight: '600', color: c.primary },
   facts: { flexDirection: 'row', gap: spacing.sm },
   fact: {
     flex: 1,
@@ -98,24 +128,24 @@ const styles = StyleSheet.create({
     gap: 2,
     paddingVertical: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  factValue: { fontSize: 17, fontWeight: '800', color: colors.text },
-  factLabel: { fontSize: 12, color: colors.muted },
+  factValue: { fontSize: 17, fontWeight: '800', color: c.text },
+  factLabel: { fontSize: 12, color: c.muted },
   ratings: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.lg, rowGap: spacing.xs },
   rating: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingText: { fontSize: 14, color: colors.muted },
-  strong: { fontWeight: '800', color: colors.text },
+  ratingText: { fontSize: 14, color: c.muted },
+  strong: { fontWeight: '800', color: c.text },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   tag: {
-    backgroundColor: colors.primarySoft,
+    backgroundColor: c.primarySoft,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radius.pill,
   },
   pressed: { opacity: 0.6 },
-  tagLabel: { fontSize: 13, color: colors.primary },
-  credits: { fontSize: 13, color: colors.muted, lineHeight: 19 },
-});
+  tagLabel: { fontSize: 13, color: c.primary },
+  credits: { fontSize: 13, color: c.muted, lineHeight: 19 },
+}));

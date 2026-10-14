@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type { TagCount } from '../../domain/filters';
 import type { TagGroup } from '../../domain/types';
 import { Icon } from '../../ui/Icon';
-import { colors, radius, spacing } from '../../ui/theme';
+import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
 import { TagChecklist } from '../TagChecklist';
 
 export type TagOption = { group: TagGroup; label: string; tags: TagCount[] };
@@ -17,6 +17,8 @@ type Props = {
 
 /** Une ligne par groupe de tags, résumant la sélection ; un tap ouvre la liste à cocher. */
 export function TagFilterRows({ options, selected, onChange }: Props) {
+  const c = useColors();
+  const styles = useStyles();
   const [editing, setEditing] = useState<TagGroup | null>(null);
   const edited = options.find((o) => o.group === editing);
 
@@ -40,10 +42,12 @@ export function TagFilterRows({ options, selected, onChange }: Props) {
             </View>
             {chosen.length > 0 && (
               <View style={styles.count}>
-                <Text style={styles.countText}>{chosen.length}</Text>
+                <Text style={styles.countText} maxFontSizeMultiplier={1.3}>
+                  {chosen.length}
+                </Text>
               </View>
             )}
-            <Icon name="chevron-forward" size={18} color={colors.muted} />
+            <Icon name="chevron-forward" size={18} color={c.muted} />
           </Pressable>
         );
       })}
@@ -62,12 +66,12 @@ export function TagFilterRows({ options, selected, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     overflow: 'hidden',
   },
   row: {
@@ -78,20 +82,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
-  separator: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  pressed: { backgroundColor: colors.primarySoft },
+  separator: { borderTopWidth: 1, borderTopColor: c.border },
+  pressed: { backgroundColor: c.primarySoft },
   texts: { flex: 1, gap: 1 },
-  label: { fontSize: 15, fontWeight: '600', color: colors.text },
-  summary: { fontSize: 13, color: colors.muted },
-  summaryActive: { color: colors.primary },
+  label: { fontSize: 15, fontWeight: '600', color: c.text },
+  summary: { fontSize: 13, color: c.muted },
+  summaryActive: { color: c.primary },
   count: {
     minWidth: 22,
-    height: 22,
+    minHeight: 22,
     paddingHorizontal: 6,
     borderRadius: radius.pill,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countText: { color: colors.onPrimary, fontSize: 12, fontWeight: '700' },
-});
+  countText: { color: c.onPrimary, fontSize: 12, fontWeight: '700' },
+}));

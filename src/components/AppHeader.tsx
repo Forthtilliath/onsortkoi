@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { IconButton } from '../ui/IconButton';
-import { colors, spacing } from '../ui/theme';
+import { spacing, themedStyles } from '../ui/theme';
 
 type Props = {
   /** Nombre de jeux de base ; `null` sans collection importée. */
@@ -10,6 +10,7 @@ type Props = {
 };
 
 export function AppHeader({ gameCount, onOpenSettings }: Props) {
+  const styles = useStyles();
   return (
     <View style={styles.header}>
       <View style={styles.titles}>
@@ -27,7 +28,7 @@ export function AppHeader({ gameCount, onOpenSettings }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -37,6 +38,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   titles: { flex: 1 },
-  title: { fontSize: 26, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: colors.muted },
-});
+  title: { fontSize: 26, fontWeight: '800', color: c.primary, letterSpacing: -0.5 },
+  subtitle: { fontSize: 14, color: c.muted },
+}));

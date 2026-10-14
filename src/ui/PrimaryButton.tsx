@@ -1,7 +1,7 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 import { Icon, type IconName } from './Icon';
-import { colors, radius, spacing } from './theme';
+import { radius, spacing, themedStyles, useColors } from './theme';
 
 type Props = {
   label: string;
@@ -13,7 +13,9 @@ type Props = {
 };
 
 export function PrimaryButton({ label, onPress, icon, disabled = false, outline = false }: Props) {
-  const color = outline ? colors.primary : colors.onPrimary;
+  const c = useColors();
+  const styles = useStyles();
+  const color = outline ? c.primary : c.onPrimary;
   return (
     <Pressable
       onPress={onPress}
@@ -28,7 +30,7 @@ export function PrimaryButton({ label, onPress, icon, disabled = false, outline 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -36,10 +38,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     minHeight: 50,
     paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
-  outline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+  outline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: c.primary },
   pressed: { opacity: 0.7 },
-  label: { fontSize: 16, fontWeight: '700' },
-});
+  label: { fontSize: 16, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
+}));

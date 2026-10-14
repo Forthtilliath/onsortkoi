@@ -1,7 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { Icon, type IconName } from './Icon';
-import { colors, radius } from './theme';
+import { radius, themedStyles, useColors } from './theme';
 
 type Props = {
   icon: IconName;
@@ -14,6 +14,8 @@ type Props = {
 };
 
 export function IconButton({ icon, label, onPress, badge = 0, filled = false }: Props) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -22,10 +24,12 @@ export function IconButton({ icon, label, onPress, badge = 0, filled = false }: 
       hitSlop={6}
       style={({ pressed }) => [styles.button, filled && styles.filled, pressed && styles.pressed]}
     >
-      <Icon name={icon} size={22} color={filled ? colors.onPrimary : colors.text} />
+      <Icon name={icon} size={22} color={filled ? c.onPrimary : c.text} />
       {badge > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge}</Text>
+          <Text style={styles.badgeText} maxFontSizeMultiplier={1.3}>
+            {badge}
+          </Text>
         </View>
       )}
     </Pressable>
@@ -34,30 +38,30 @@ export function IconButton({ icon, label, onPress, badge = 0, filled = false }: 
 
 const SIZE = 44;
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   button: {
     width: SIZE,
     height: SIZE,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  filled: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filled: { backgroundColor: c.primary, borderColor: c.primary },
   pressed: { opacity: 0.7 },
   badge: {
     position: 'absolute',
     top: -6,
     right: -6,
     minWidth: 20,
-    height: 20,
+    minHeight: 20,
     paddingHorizontal: 5,
     borderRadius: radius.pill,
-    backgroundColor: colors.text,
+    backgroundColor: c.text,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { color: colors.onPrimary, fontSize: 11, fontWeight: '700' },
-});
+  badgeText: { color: c.background, fontSize: 11, fontWeight: '700' },
+}));

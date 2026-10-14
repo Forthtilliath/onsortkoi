@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { EMPTY_UPDATE_CHECK, type UpdateCheck } from '../domain/updateCheck';
 import { loadUpdateCheck, saveUpdateCheck } from '../storage';
-import { updateNotifierStyles } from '../ui/kitStyles';
+import { useKitStyles } from '../ui/kitStyles';
 import { spacing } from '../ui/theme';
 import { checkForUpdate, currentVersion, installApk } from '../updates';
 
@@ -13,6 +13,7 @@ import { checkForUpdate, currentVersion, installApk } from '../updates';
  * sur GitHub, avec « Installer » (téléchargement puis confirmation Android) ou « Ignorer ».
  */
 export function UpdateBanner() {
+  const kit = useKitStyles();
   const stored = useRef<UpdateCheck>(EMPTY_UPDATE_CHECK);
   const [loaded, setLoaded] = useState(false);
 
@@ -39,7 +40,7 @@ export function UpdateBanner() {
         onChecked={(lastCheckedAt) => record({ lastCheckedAt })}
         onDismissVersion={(dismissedVersion) => record({ dismissedVersion })}
         downloadAndInstallApk={installApk}
-        styles={updateNotifierStyles}
+        styles={kit.updateNotifier}
       />
     </View>
   );
