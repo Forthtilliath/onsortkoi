@@ -16,6 +16,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@forthtilliath/expo-config-plugins": "^0.1.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^26.6.5",
     "@types/react": "~19.2.2",
@@ -27,7 +28,7 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
+    "android": "expo run:android",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit && jest",
