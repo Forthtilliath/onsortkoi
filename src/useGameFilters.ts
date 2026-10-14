@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 
 import type { TagOption } from './components/filters/TagFilterRows';
 import { describeActiveFilters } from './domain/activeFilters';
-import { applyFilters, collectTags, EMPTY_FILTERS, type Filters } from './domain/filters';
+import { applyFilters, collectTags, EMPTY_FILTERS, facetTags, type Filters } from './domain/filters';
 import { filterableTags, pruneFilterTags, type Settings } from './domain/settings';
 import type { Game, TagGroup } from './domain/types';
 
@@ -22,12 +22,21 @@ export function useGameFilters(games: Game[] | undefined, settings: Settings) {
 
   const tagOptions = useMemo<TagOption[]>(() => {
     if (!games) return [];
-    return FILTER_GROUPS.map(({ group, label }) => {
+    // Le groupe reste affiché tant que la collection a des tags proposés ; dans la liste,
+    // seuls les tags sans jeu sous les autres critères sont masqués (sauf s'ils sont cochés).
+    return FILTER_GROUPS.flatMap(({ group, label }) => {
       const all = collectTags(games, group);
       const offered = new Set(filterableTags(settings, group, all.map((t) => t.name)));
-      return { group, label, tags: all.filter((t) => offered.has(t.name)) };
-    }).filter((option) => option.tags.length > 0);
-  }, [games, settings]);
+      if (offered.size === 0) return [];
+      const chosen = activeFilters.tags[group];
+      const counts = new Map(facetTags(games, activeFilters, group).map((t) => [t.name, t.count]));
+      const tags = all
+        .filter((t) => offered.has(t.name))
+        .map((t) => ({ name: t.name, count: counts.get(t.name) ?? 0 }))
+        .filter((t) => t.count > 0 || chosen.includes(t.name));
+      return [{ group, label, tags }];
+    });
+  }, [games, settings, activeFilters]);
 
   /** À appeler après un changement de réglages : retire les tags qui ne sont plus proposés. */
   const pruneFor = (next: Settings) => setFilters((f) => pruneFilterTags(f, next));

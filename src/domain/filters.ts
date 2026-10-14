@@ -77,3 +77,15 @@ export function collectTags(games: Game[], group: TagGroup): TagCount[] {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
 }
+
+/**
+ * Compte les tags d'un groupe parmi les jeux retenus par les autres critères
+ * (extensions comprises) : c'est le nombre de jeux visibles si on coche ce seul tag.
+ */
+export function facetTags(games: Game[], filters: Filters, group: TagGroup): TagCount[] {
+  const others: Filters = { ...filters, tags: { ...filters.tags, [group]: [] } };
+  return collectTags(
+    games.filter((game) => matches(game, others)),
+    group,
+  );
+}

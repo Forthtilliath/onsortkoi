@@ -1,4 +1,4 @@
-import { applyFilters, collectTags, EMPTY_FILTERS, type Filters } from '../filters';
+import { applyFilters, collectTags, EMPTY_FILTERS, facetTags, type Filters } from '../filters';
 import type { Game } from '../types';
 
 const game = (overrides: Partial<Game>): Game => ({
@@ -75,5 +75,25 @@ describe('collectTags', () => {
       { name: 'Coopératif', count: 1 },
       { name: 'Dés', count: 1 },
     ]);
+  });
+});
+
+describe('facetTags', () => {
+  const lcg = [...games, game({ id: 6, title: 'Extension JCE', type: 'extension', categories: ['Jeu de cartes évolutif'] })];
+  const facet = (f: Partial<Filters>) => facetTags(lcg, { ...EMPTY_FILTERS, ...f }, 'categories');
+
+  it('ignore les extensions masquées', () => {
+    expect(facet({})).toEqual([
+      { name: "Jeu d'Ambiance", count: 1 },
+      { name: 'Jeu de tuiles', count: 1 },
+    ]);
+    expect(facet({ includeExpansions: true })).toContainEqual({ name: 'Jeu de cartes évolutif', count: 1 });
+  });
+
+  it('tient compte des autres critères mais pas des tags du groupe', () => {
+    expect(facet({ players: 8 })).toEqual([{ name: "Jeu d'Ambiance", count: 1 }]);
+    const tags = { ...EMPTY_FILTERS.tags, categories: ['Jeu de tuiles'] };
+    expect(facet({ tags })).toHaveLength(2);
+    expect(facet({ tags: { ...tags, mechanisms: ['Coopératif'] } })).toEqual([]);
   });
 });
