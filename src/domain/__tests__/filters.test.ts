@@ -1,4 +1,13 @@
-import { applyFilters, collectTags, EMPTY_FILTERS, facetTags, type Filters, filtersForTag } from '../filters';
+import {
+  applyFilters,
+  buildSearchIndex,
+  collectTags,
+  EMPTY_FILTERS,
+  facetTags,
+  type Filters,
+  filterGames,
+  filtersForTag,
+} from '../filters';
 import type { Game } from '../types';
 
 const game = (overrides: Partial<Game>): Game => ({
@@ -113,5 +122,15 @@ describe('filtersForTag', () => {
       tags: { ...EMPTY_FILTERS.tags, mechanisms: ['Coopératif'] },
     });
     expect(applyFilters(games, filtersForTag(EMPTY_FILTERS, 'mechanisms', 'Coopératif')).map((g) => g.id)).toEqual([1]);
+  });
+});
+
+describe('filterGames', () => {
+  it("garde l'ordre reçu et donne le même résultat avec l'index de recherche", () => {
+    const reversed = [...games].reverse();
+    const filters = { ...EMPTY_FILTERS, query: 'a', includeExpansions: true };
+    const withIndex = filterGames(reversed, filters, buildSearchIndex(reversed)).map((g) => g.id);
+    expect(withIndex).toEqual(filterGames(reversed, filters).map((g) => g.id));
+    expect(withIndex).toEqual([5, 4, 3]);
   });
 });
