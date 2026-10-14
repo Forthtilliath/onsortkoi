@@ -1,3 +1,4 @@
+import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
@@ -5,20 +6,6 @@ import { isStandalone } from './domain/filters';
 import type { Game } from './domain/types';
 import { pickAndImport } from './importFile';
 import { loadCollection, saveCollection, type StoredCollection } from './storage';
-
-function confirmReplace(count: number): Promise<boolean> {
-  return new Promise((resolve) =>
-    Alert.alert(
-      'Remplacer la collection ?',
-      `Les ${count} jeux actuels seront remplacés par le contenu du fichier.`,
-      [
-        { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
-        { text: 'Remplacer', style: 'destructive', onPress: () => resolve(true) },
-      ],
-      { cancelable: true, onDismiss: () => resolve(false) },
-    ),
-  );
-}
 
 export function useCollection() {
   const [collection, setCollection] = useState<StoredCollection | null>(null);
@@ -32,6 +19,15 @@ export function useCollection() {
     });
   }, []);
 
+  const apply = useCallback(async (games: Game[]) => {
+    try {
+      setCollection(await saveCollection(games));
+      Alert.alert('Import réussi', describe(games));
+    } catch {
+      Alert.alert('Import impossible', "Une erreur inattendue s'est produite. Rien n'a été modifié.");
+    }
+  }, []);
+
   const runImport = useCallback(async () => {
     setImporting(true);
     try {
@@ -41,19 +37,23 @@ export function useCollection() {
         Alert.alert('Import impossible', result.error);
         return;
       }
-      if (collection && !(await confirmReplace(collection.games.length))) return;
-
-      const saved = await saveCollection(result.games);
-      setCollection(saved);
-      Alert.alert('Import réussi', describe(result.games));
+      if (!collection) {
+        await apply(result.games);
+        return;
+      }
+      confirmDestructive('Remplacer la collection ?', () => void apply(result.games), {
+        message: `Les ${collection.games.length} jeux actuels seront remplacés par le contenu du fichier.`,
+        confirmLabel: 'Remplacer',
+      });
     } catch {
       Alert.alert('Import impossible', "Une erreur inattendue s'est produite. Rien n'a été modifié.");
     } finally {
       setImporting(false);
     }
-  }, [collection]);
+  }, [collection, apply]);
 
-  return { collection, loading, importing, runImport };
+  // Pour une collection déjà enregistrée ailleurs (restauration d'une sauvegarde).
+  return { collection, loading, importing, runImport, replaceCollection: setCollection };
 }
 
 function describe(games: Game[]): string {

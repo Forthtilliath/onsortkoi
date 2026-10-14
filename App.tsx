@@ -1,97 +1,117 @@
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppHeader } from './src/components/AppHeader';
 import { EmptyState } from './src/components/EmptyState';
-import { FilterPanel, type TagOption } from './src/components/FilterPanel';
-import { GameCard } from './src/components/GameCard';
+import { ActiveFilterBar } from './src/components/filters/ActiveFilterBar';
+import { FilterSheet } from './src/components/filters/FilterSheet';
+import { SearchBar } from './src/components/filters/SearchBar';
+import { GameCard } from './src/components/game/GameCard';
+import { GameSheet } from './src/components/game/GameSheet';
+import { NoResults } from './src/components/NoResults';
 import { SettingsScreen } from './src/components/SettingsScreen';
-import { applyFilters, collectTags, EMPTY_FILTERS, type Filters } from './src/domain/filters';
-import { filterableTags, pruneFilterTags, type Settings } from './src/domain/settings';
-import type { TagGroup } from './src/domain/types';
+import { clearCriteria } from './src/domain/activeFilters';
+import { isStandalone } from './src/domain/filters';
+import type { Settings } from './src/domain/settings';
+import type { Game } from './src/domain/types';
 import { colors, spacing } from './src/ui/theme';
+import { useBackup } from './src/useBackup';
 import { useCollection } from './src/useCollection';
+import { useGameFilters } from './src/useGameFilters';
 import { useSettings } from './src/useSettings';
 
-const FILTER_GROUPS: { group: TagGroup; label: string }[] = [
-  { group: 'categories', label: 'Catégories' },
-  { group: 'mechanisms', label: 'Mécanismes' },
-  { group: 'themes', label: 'Thèmes' },
-];
+type Panel = 'filters' | 'game' | 'settings' | null;
 
 function Main() {
-  const { collection, loading, importing, runImport } = useCollection();
+  const { collection, loading, importing, runImport, replaceCollection } = useCollection();
   const { settings, updateSettings } = useSettings();
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
   const games = collection?.games;
-  const activeFilters = useMemo(() => pruneFilterTags(filters, settings), [filters, settings]);
-  const results = useMemo(() => (games ? applyFilters(games, activeFilters) : []), [games, activeFilters]);
+  const { filters, setFilters, results, criteria, tagOptions, pruneFor } = useGameFilters(games, settings);
+  const [panel, setPanel] = useState<Panel>(null);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const { bottom } = useSafeAreaInsets();
 
-  const tagOptions = useMemo<TagOption[]>(() => {
-    if (!games) return [];
-    return FILTER_GROUPS.map(({ group, label }) => ({
-      group,
-      label,
-      tags: filterableTags(settings, group, collectTags(games, group).map((t) => t.name)),
-    })).filter((option) => option.tags.length > 0);
-  }, [games, settings]);
+  const baseGameCount = useMemo(() => (games ? games.filter(isStandalone).length : null), [games]);
+
+  const openGame = useCallback((game: Game) => {
+    setSelectedGame(game);
+    setPanel('game');
+  }, []);
+  const close = () => setPanel(null);
 
   const changeSettings = (next: Settings) => {
     updateSettings(next);
-    setFilters((f) => pruneFilterTags(f, next));
+    pruneFor(next);
   };
+
+  const backup = useBackup({
+    collection,
+    settings,
+    onRestored: ({ collection: restored, settings: restoredSettings }) => {
+      replaceCollection(restored);
+      changeSettings(restoredSettings);
+    },
+  });
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={styles.appTitle}>LudoCollec</Text>
-        {collection && (
-          <Pressable
-            onPress={() => setSettingsOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Réglages"
-            hitSlop={8}
-          >
-            <Text style={styles.headerLink}>Réglages</Text>
-          </Pressable>
-        )}
-      </View>
+      <AppHeader gameCount={baseGameCount} onOpenSettings={() => setPanel('settings')} />
 
       {loading ? (
         <ActivityIndicator style={styles.loader} color={colors.primary} />
       ) : !collection ? (
-        <EmptyState onImport={runImport} busy={importing} />
+        <EmptyState onImport={runImport} onRestore={backup.runRestore} busy={importing || backup.restoring} />
       ) : (
         <>
+          <View style={styles.controls}>
+            <View style={styles.search}>
+              <SearchBar
+                query={filters.query}
+                onChangeQuery={(query) => setFilters({ ...filters, query })}
+                activeCount={criteria.length}
+                onOpenFilters={() => setPanel('filters')}
+              />
+            </View>
+            <ActiveFilterBar
+              active={criteria}
+              onRemove={(criterion) => setFilters(criterion.clear(filters))}
+              onClearAll={() => setFilters(clearCriteria(filters))}
+              resultCount={results.length}
+            />
+          </View>
+
           <FlatList
             data={results}
             keyExtractor={(game) => String(game.id)}
-            renderItem={({ item }) => <GameCard game={item} />}
-            ListHeaderComponent={
-              <FilterPanel
-                filters={activeFilters}
-                onChange={setFilters}
-                tagOptions={tagOptions}
-                onOpenSettings={() => setSettingsOpen(true)}
-                resultCount={results.length}
-              />
-            }
-            ListEmptyComponent={<Text style={styles.noResult}>Aucun jeu ne correspond à ces critères.</Text>}
-            contentContainerStyle={styles.list}
+            renderItem={({ item }) => <GameCard game={item} onPress={openGame} />}
+            ListEmptyComponent={<NoResults onReset={() => setFilters({ ...clearCriteria(filters), query: '' })} />}
+            contentContainerStyle={{ paddingTop: spacing.xs, paddingBottom: bottom + spacing.xl }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           />
+
+          <FilterSheet
+            visible={panel === 'filters'}
+            onClose={close}
+            filters={filters}
+            onChange={setFilters}
+            tagOptions={tagOptions}
+            resultCount={results.length}
+            onOpenSettings={() => setPanel('settings')}
+          />
+          <GameSheet game={selectedGame} visible={panel === 'game'} onClose={close} />
           <SettingsScreen
-            visible={settingsOpen}
+            visible={panel === 'settings'}
             settings={settings}
             onChange={changeSettings}
             collection={collection}
             onReimport={runImport}
             importing={importing}
-            onClose={() => setSettingsOpen(false)}
+            onExport={backup.exportBackup}
+            onRestore={backup.restoreBackup}
+            onClose={close}
           />
         </>
       )}
@@ -110,18 +130,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  appTitle: { fontSize: 22, fontWeight: '800', color: colors.primary },
-  headerLink: { fontSize: 15, fontWeight: '600', color: colors.primary },
   loader: { marginTop: spacing.xl },
-  list: { paddingBottom: spacing.xl },
-  noResult: { textAlign: 'center', color: colors.muted, marginTop: spacing.xl, paddingHorizontal: spacing.lg },
+  controls: { gap: spacing.sm, paddingBottom: spacing.sm },
+  search: { paddingHorizontal: spacing.lg },
 });
