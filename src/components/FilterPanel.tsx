@@ -23,7 +23,18 @@ type Props = {
 export function FilterPanel({ filters, onChange, onOpenTags, resultCount }: Props) {
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) => onChange({ ...filters, [key]: value });
 
-  const removeTag = (group: TagGroup, tag: string) =>
+  // Garde min ≤ max : choisir une borne incompatible efface l'autre.
+  const setDuration = (key: 'minDuration' | 'maxDuration', value: number | null) => {
+    const other = key === 'minDuration' ? 'maxDuration' : 'minDuration';
+    const otherValue = filters[other];
+    const conflict =
+      value !== null &&
+      otherValue !== null &&
+      (key === 'minDuration' ? value > otherValue : value < otherValue);
+    onChange({ ...filters, [key]: value, ...(conflict && { [other]: null }) });
+  };
+
+  const removeTag =(group: TagGroup, tag: string) =>
     set('tags', { ...filters.tags, [group]: filters.tags[group].filter((t) => t !== tag) });
 
   const selectedTags = TAG_GROUPS.flatMap(({ key }) => filters.tags[key].map((tag) => ({ group: key, tag })));
@@ -50,10 +61,17 @@ export function FilterPanel({ filters, onChange, onOpenTags, resultCount }: Prop
         format={String}
       />
       <OptionRow
-        label="Temps disponible (au plus)"
+        label="Durée minimum"
+        options={DURATION_OPTIONS}
+        value={filters.minDuration}
+        onChange={(v) => setDuration('minDuration', v)}
+        format={formatMinutes}
+      />
+      <OptionRow
+        label="Durée maximum"
         options={DURATION_OPTIONS}
         value={filters.maxDuration}
-        onChange={(v) => set('maxDuration', v)}
+        onChange={(v) => setDuration('maxDuration', v)}
         format={formatMinutes}
       />
       <OptionRow

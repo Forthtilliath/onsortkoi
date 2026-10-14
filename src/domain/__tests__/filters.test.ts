@@ -50,6 +50,15 @@ describe('applyFilters', () => {
     expect(filter({ maxDuration: 60 })).toEqual([3, 2, 1]);
   });
 
+  it('garde les jeux qui peuvent durer au moins le temps voulu (durée maxi)', () => {
+    expect(filter({ minDuration: 45 })).toEqual([3, 1]);
+    expect(filter({ minDuration: 90 })).toEqual([1]);
+  });
+
+  it('combine durée minimum et maximum', () => {
+    expect(filter({ minDuration: 30, maxDuration: 60 })).toEqual([3, 1]);
+  });
+
   it("garde les jeux adaptés à l'âge du plus jeune", () => {
     expect(filter({ youngestAge: 8 })).toEqual([3, 2]);
   });

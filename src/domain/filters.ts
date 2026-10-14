@@ -3,7 +3,9 @@ import type { Game, TagGroup } from './types';
 export type Filters = {
   query: string;
   players: number | null;
-  /** Durée disponible en minutes : le jeu doit pouvoir se jouer dans ce temps (durée mini). */
+  /** Durée souhaitée au moins, en minutes : la partie peut durer ce temps (durée maxi du jeu). */
+  minDuration: number | null;
+  /** Durée disponible au plus, en minutes : le jeu peut se jouer dans ce temps (durée mini du jeu). */
   maxDuration: number | null;
   /** Âge du plus jeune joueur : l'âge conseillé du jeu ne doit pas le dépasser. */
   youngestAge: number | null;
@@ -14,6 +16,7 @@ export type Filters = {
 export const EMPTY_FILTERS: Filters = {
   query: '',
   players: null,
+  minDuration: null,
   maxDuration: null,
   youngestAge: null,
   includeExpansions: false,
@@ -47,10 +50,13 @@ export function matches(game: Game, filters: Filters): boolean {
   const query = normalize(filters.query);
   if (query && !normalize(`${game.title} ${game.subtitle}`).includes(query)) return false;
 
-  const { players, maxDuration, youngestAge } = filters;
+  const { players, minDuration, maxDuration, youngestAge } = filters;
   if (players !== null) {
     const range = game.players;
     if (!range || players < range.min || (range.max !== null && players > range.max)) return false;
+  }
+  if (minDuration !== null && (!game.duration || (game.duration.max !== null && game.duration.max < minDuration))) {
+    return false;
   }
   if (maxDuration !== null && (!game.duration || game.duration.min > maxDuration)) return false;
   if (youngestAge !== null && (game.age === null || game.age > youngestAge)) return false;
@@ -69,6 +75,7 @@ export function countActiveFilters(filters: Filters): number {
   return (
     (filters.query.trim() ? 1 : 0) +
     (filters.players !== null ? 1 : 0) +
+    (filters.minDuration !== null ? 1 : 0) +
     (filters.maxDuration !== null ? 1 : 0) +
     (filters.youngestAge !== null ? 1 : 0) +
     (filters.includeExpansions ? 1 : 0) +
