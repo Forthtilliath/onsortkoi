@@ -4,7 +4,7 @@
 
 Onsortkoi est une application Android qui reprend ta collection de jeux de société [MyLudo](https://www.myludo.fr) et t'aide à choisir quoi sortir selon la situation : combien vous êtes, combien de temps vous avez, l'âge du plus jeune joueur, l'envie du moment.
 
-Tout fonctionne hors ligne et reste sur ton téléphone.
+Tout fonctionne hors ligne. Seule la sauvegarde automatique, si tu l'actives, envoie une copie sur ton Google Drive.
 
 > Développeurs : voir [README-DEV.md](README-DEV.md).
 
@@ -16,9 +16,9 @@ Télécharge le fichier `.apk` de la dernière version sur la page [Releases](ht
 
 1. Sur [myludo.fr](https://www.myludo.fr) : *Mon compte → Exporter*, au format **JSON**.
 2. Copie le fichier sur ton téléphone (ou dans ton Google Drive).
-3. Dans Onsortkoi : **Importer un export MyLudo**, puis choisis le fichier.
+3. Dans Onsortkoi : **Importer un fichier**, puis choisis le fichier.
 
-Tu as déjà une sauvegarde Onsortkoi ? Choisis plutôt **Restaurer une sauvegarde Drive** sur l'écran d'accueil.
+Tu utilisais déjà Onsortkoi ? **Restaurer depuis Google Drive** récupère ta sauvegarde automatique (connecte le même compte Google). Un fichier de sauvegarde se restaure aussi avec **Importer un fichier**.
 
 ## Trouver un jeu
 
@@ -60,16 +60,22 @@ L'icône en haut à droite ouvre les réglages.
 
 ## Sauvegarde et changement de téléphone
 
-**Sauvegarder** ouvre le menu de partage Android avec un fichier `Onsortkoi-sauvegarde-AAAA-MM-JJ.json` contenant ta collection et tes réglages. Choisis **Drive** pour l'y enregistrer (ou toute autre destination).
+### Sauvegarde automatique (Google Drive)
 
-Sur le nouveau téléphone, **Restaurer** (dans les réglages ou sur l'écran d'accueil) ouvre le sélecteur de fichiers : choisis la sauvegarde dans Drive. Dans les réglages, l'app demande confirmation, car la collection et les réglages actuels seront remplacés.
+Dans les réglages, **Connecter Google Drive** relie un compte Google. Ensuite, ta collection et tes réglages y sont envoyés automatiquement après chaque modification (import, réglage changé). Sans réseau, l'envoi attend le prochain lancement.
 
-Aucun compte Google n'est relié à l'app : c'est Android qui transmet le fichier à Drive.
+La copie est rangée dans un dossier privé de l'app : elle n'apparaît pas dans ton Drive, et l'app n'a accès à aucun autre de tes fichiers.
+
+Sur un nouveau téléphone, **Restaurer depuis Google Drive** (écran d'accueil) récupère tout en connectant le même compte. **Déconnecter** arrête les envois ; la copie reste sur Drive.
+
+### Sauvegarde manuelle (fichier)
+
+**Exporter mes données** ouvre le menu de partage Android avec un fichier `Onsortkoi-sauvegarde-AAAA-MM-JJ.json`. **Importer une sauvegarde** le relit, après confirmation, et **Annuler la dernière restauration** remet les données d'avant.
 
 ## Confidentialité et sécurité
 
-- **Aucune connexion réseau** : aucune donnée n'est envoyée nulle part sans action de ta part (partage d'une sauvegarde).
-- **Aucune permission** demandée ; l'accès au stockage, au micro et à la superposition d'écran est explicitement bloqué.
+- **Réseau seulement pour la sauvegarde** : rien n'est envoyé tant que tu ne connectes pas Google Drive. Une fois connecté, seule ta collection et tes réglages partent vers ton propre Drive (accès limité au dossier privé de l'app).
+- **Aucune permission sensible** demandée ; l'accès au stockage, au micro et à la superposition d'écran est explicitement bloqué.
 - **Données minimales** : seuls les champs utiles sont gardés de l'export MyLudo. Prix d'achat, propriétaire, commentaires et autres données personnelles sont ignorés à l'import.
 - **Fichiers vérifiés** : chaque jeu d'un export ou d'une sauvegarde est contrôlé (types, bornes, longueurs ; 10 Mo et 5 000 jeux maximum). À la première anomalie, le fichier entier est refusé avec un message qui indique le jeu et le champ en cause, et **rien n'est modifié**.
 - Une sauvegarde créée par une autre version de l'app est refusée plutôt que mal interprétée.
