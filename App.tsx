@@ -1,50 +1,81 @@
 import { useAutoBackup } from '@forthtilliath/expo-backup-ui';
+import { ThemePreferenceProvider } from '@forthtilliath/react-native-kit/components/theme/ThemePreferenceProvider';
+import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as SystemUI from 'expo-system-ui';
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, type FlatList, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from './src/components/AppHeader';
 import { EmptyState } from './src/components/EmptyState';
 import { ActiveFilterBar } from './src/components/filters/ActiveFilterBar';
 import { FilterSheet } from './src/components/filters/FilterSheet';
 import { SearchBar } from './src/components/filters/SearchBar';
-import { GameCard } from './src/components/game/GameCard';
+import { SortSheet } from './src/components/filters/SortSheet';
+import { GameList } from './src/components/game/GameList';
 import { GameSheet } from './src/components/game/GameSheet';
 import { NoResults } from './src/components/NoResults';
+import { RANDOM_BUTTON_SPACE, RandomButton } from './src/components/RandomButton';
 import { SettingsScreen } from './src/components/SettingsScreen';
 import { UpdateBanner } from './src/components/UpdateBanner';
+import { backup, setBackupAppliedListener } from './src/backupManager';
 import { clearCriteria } from './src/domain/activeFilters';
+import type { Backup } from './src/domain/backup';
 import { filtersForTag, isStandalone } from './src/domain/filters';
+import { type ListRow, pickRandom } from './src/domain/listing';
 import type { Settings } from './src/domain/settings';
 import type { Game, TagGroup } from './src/domain/types';
-import { colors, spacing } from './src/ui/theme';
-import { backup, setBackupAppliedListener } from './src/backupManager';
+import { loadThemePreference, saveThemePreference } from './src/storage';
+import { spacing, themedStyles, useColors } from './src/ui/theme';
+import { ToastHost } from './src/ui/Toast';
 import { useCollection } from './src/useCollection';
 import { useFirstImport } from './src/useFirstImport';
 import { useGameFilters } from './src/useGameFilters';
 import { useSettings } from './src/useSettings';
 
-type Panel = 'filters' | 'game' | 'settings' | null;
+type Panel = 'filters' | 'sort' | 'game' | 'settings' | null;
 
 function Main() {
+  const c = useColors();
+  const styles = useStyles();
   const { collection, loading, importing, runImport, importGames, replaceCollection } = useCollection();
   const { settings, updateSettings } = useSettings();
   const games = collection?.games;
-  const { filters, setFilters, results, criteria, tagOptions, pruneFor } = useGameFilters(games, settings);
   const [panel, setPanel] = useState<Panel>(null);
+  const { filters, setFilters, sort, setSort, results, criteria, tagOptions, pruneFor } = useGameFilters(
+    games,
+    settings,
+    panel === 'filters',
+  );
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const { bottom } = useSafeAreaInsets();
+  /** La fiche ouverte vient d'un tirage au sort (bouton « Relancer »). */
+  const [drawn, setDrawn] = useState(false);
+
+  // Fond natif (sous les modales, pendant le clavier) assorti au thème.
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(c.background).catch(() => {});
+  }, [c.background]);
 
   const baseGameCount = useMemo(() => (games ? games.filter(isStandalone).length : null), [games]);
 
   const openGame = useCallback((game: Game) => {
     setSelectedGame(game);
+    setDrawn(false);
     setPanel('game');
   }, []);
   const close = () => setPanel(null);
 
-  const listRef = useRef<FlatList<Game>>(null);
+  const draw = () => {
+    const game = pickRandom(results, drawn ? selectedGame : null);
+    if (!game) return;
+    successFeedback();
+    setSelectedGame(game);
+    setDrawn(true);
+    setPanel('game');
+  };
+
+  const listRef = useRef<FlatList<ListRow>>(null);
   const showTag = (group: TagGroup, tag: string) => {
     setFilters(filtersForTag(filters, group, tag));
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -58,22 +89,24 @@ function Main() {
 
   useAutoBackup(backup);
   // Après une restauration (fichier, Drive ou annulation) : la mémoire suit le stockage.
-  useEffect(() => {
-    setBackupAppliedListener(({ collection: restored, settings: restoredSettings }) => {
-      replaceCollection(restored);
-      changeSettings(restoredSettings);
-    });
-    return () => setBackupAppliedListener(null);
+  const onBackupApplied = useEffectEvent(({ collection: restored, settings: restoredSettings }: Backup) => {
+    replaceCollection(restored);
+    changeSettings(restoredSettings);
   });
+  useEffect(() => {
+    setBackupAppliedListener((data) => onBackupApplied(data));
+    return () => setBackupAppliedListener(null);
+  }, []);
   const firstImport = useFirstImport(importGames);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+      <StatusBar style={c.scheme === 'dark' ? 'light' : 'dark'} />
       <AppHeader gameCount={baseGameCount} onOpenSettings={() => setPanel('settings')} />
       <UpdateBanner />
 
       {loading ? (
-        <ActivityIndicator style={styles.loader} color={colors.primary} />
+        <ActivityIndicator style={styles.loader} color={c.primary} />
       ) : !collection ? (
         <EmptyState
           onImport={firstImport.importFile}
@@ -96,19 +129,20 @@ function Main() {
               onRemove={(criterion) => setFilters(criterion.clear(filters))}
               onClearAll={() => setFilters(clearCriteria(filters))}
               resultCount={results.length}
+              sort={sort}
+              onOpenSort={() => setPanel('sort')}
             />
           </View>
 
-          <FlatList
-            ref={listRef}
-            data={results}
-            keyExtractor={(game) => String(game.id)}
-            renderItem={({ item }) => <GameCard game={item} onPress={openGame} />}
-            ListEmptyComponent={<NoResults onReset={() => setFilters({ ...clearCriteria(filters), query: '' })} />}
-            contentContainerStyle={{ paddingTop: spacing.xs, paddingBottom: bottom + spacing.xl }}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
+          <GameList
+            listRef={listRef}
+            games={results}
+            withLetters={sort === 'title'}
+            onOpenGame={openGame}
+            empty={<NoResults onReset={() => setFilters({ ...clearCriteria(filters), query: '' })} />}
+            bottomSpace={RANDOM_BUTTON_SPACE}
           />
+          <RandomButton count={results.length} onPress={draw} />
 
           <FilterSheet
             visible={panel === 'filters'}
@@ -119,7 +153,22 @@ function Main() {
             resultCount={results.length}
             onOpenSettings={() => setPanel('settings')}
           />
-          <GameSheet game={selectedGame} visible={panel === 'game'} onClose={close} onSelectTag={showTag} />
+          <SortSheet
+            visible={panel === 'sort'}
+            onClose={close}
+            sort={sort}
+            onChange={(next) => {
+              setSort(next);
+              listRef.current?.scrollToOffset({ offset: 0, animated: false });
+            }}
+          />
+          <GameSheet
+            game={selectedGame}
+            visible={panel === 'game'}
+            onClose={close}
+            onSelectTag={showTag}
+            draw={drawn ? { from: results.length, onReroll: draw } : undefined}
+          />
           <SettingsScreen
             visible={panel === 'settings'}
             settings={settings}
@@ -131,6 +180,7 @@ function Main() {
           />
         </>
       )}
+      <ToastHost offset={collection ? RANDOM_BUTTON_SPACE : 0} />
     </SafeAreaView>
   );
 }
@@ -138,15 +188,16 @@ function Main() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <Main />
+      <ThemePreferenceProvider load={loadThemePreference} save={saveThemePreference}>
+        <Main />
+      </ThemePreferenceProvider>
     </SafeAreaProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+const useStyles = themedStyles((c) => ({
+  screen: { flex: 1, backgroundColor: c.background },
   loader: { marginTop: spacing.xl },
   controls: { gap: spacing.sm, paddingBottom: spacing.sm },
   search: { paddingHorizontal: spacing.lg },
-});
+}));
