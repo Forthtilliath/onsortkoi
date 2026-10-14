@@ -1,20 +1,20 @@
 {
   "expo": {
-    "name": "LudoCollec",
-    "slug": "ludocollec",
+    "name": "Onsortkoi",
+    "slug": "onsortkoi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#9A3F14",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.forth.ludocollec",
+      "package": "com.forthtilliath.onsortkoi",
       "versionCode": 1,
       "permissions": [],
       "blockedPermissions": [
@@ -26,6 +26,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-sharing"
+    ]
   }
 }
