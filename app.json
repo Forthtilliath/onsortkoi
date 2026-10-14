@@ -28,7 +28,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "@forthtilliath/expo-config-plugins/withReleaseSigning",
+        { "propertyPrefix": "ONSORTKOI" }
+      ],
+      "@forthtilliath/expo-config-plugins/withAndroidAbis",
+      "@forthtilliath/expo-config-plugins/withShortCxxPath"
     ]
   }
 }
