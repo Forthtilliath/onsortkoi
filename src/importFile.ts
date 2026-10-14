@@ -1,5 +1,6 @@
 import { File } from 'expo-file-system';
 
+import { readCollectionFile, type CollectionFileResult } from './domain/collectionFile';
 import { importCollection, MAX_FILE_BYTES, type ImportResult } from './domain/importSchema';
 
 type PickedText = { ok: true; text: string } | { ok: false; error: string };
@@ -29,4 +30,11 @@ export async function pickAndImport(): Promise<ImportResult | null> {
   const picked = await pickJsonText();
   if (!picked) return null;
   return picked.ok ? importCollection(picked.text) : picked;
+}
+
+/** Accueil : accepte un export MyLudo ou une sauvegarde Onsortkoi. `null` si l'utilisateur annule. */
+export async function pickCollectionFile(): Promise<CollectionFileResult | null> {
+  const picked = await pickJsonText();
+  if (!picked) return null;
+  return picked.ok ? readCollectionFile(picked.text) : picked;
 }
