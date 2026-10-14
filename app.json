@@ -14,6 +14,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "allowBackup": false,
       "package": "com.forthtilliath.onsortkoi",
       "versionCode": 2,
       "permissions": [
