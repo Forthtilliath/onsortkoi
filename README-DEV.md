@@ -64,6 +64,7 @@ src/
 │   ├── durations.ts     tranches de durée et test de chevauchement
 │   ├── activeFilters.ts critères actifs → puces { label, clear }
 │   ├── settings.ts      réglages, tags proposés, nettoyage des filtres
+│   ├── updateCheck.ts   suivi des vérifications de mise à jour (zod)
 │   └── __tests__/
 ├── storage.ts           AsyncStorage + revalidation zod au chargement
 ├── importFile.ts        sélecteur de fichier, limite de taille, lecture
@@ -72,6 +73,7 @@ src/
 ├── useGameFilters.ts    filtres en cours, résultats, tags proposés
 ├── backupManager.ts     gestionnaire expo-backup : collect / parse (readBackup) / apply
 ├── useFirstImport.ts    accueil : import d'un fichier (MyLudo ou sauvegarde), restauration Drive
+├── updates.ts           releases GitHub : version installée, vérification, téléchargement de l'APK
 ├── components/          écrans et panneaux propres à l'app
 │   ├── filters/         SearchBar, FilterSheet, TagFilterRows, ActiveFilterBar
 │   └── game/            GameCard, GameTile, GameSheet, libellés
@@ -103,12 +105,12 @@ Toute donnée venant de l'extérieur ou relue depuis le stockage est validée pa
 | --- | --- | --- |
 | Export MyLudo | `importSchema.ts` (par entrée) | fichier entier rejeté, message localisé (n° de jeu, titre, champ) |
 | Sauvegarde | en-tête `app` + `version`, puis `backupSchema` | fichier entier rejeté ; version différente refusée |
-| AsyncStorage | `storedCollectionSchema`, `settingsSchema` | donnée ignorée (collection absente, réglages par défaut) |
+| AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `updateCheckSchema` | donnée ignorée (collection absente, réglages par défaut) |
 
 - Bornes : 10 Mo par fichier, 5 000 jeux, 100 tags par jeu, 100 caractères par tag, 200 par titre, joueurs ≤ 100, durée ≤ 24 h, âge ≤ 99, notes 0–10, identifiants uniques.
 - zod supprime les clés inconnues : les données personnelles de l'export (prix, propriétaire, commentaire…) ne sont jamais enregistrées.
 - `gameSchema` reprend les mêmes bornes que l'import : une collection restaurée ne peut pas contenir ce qu'un import aurait refusé.
-- Aucune permission Android ; `READ/WRITE_EXTERNAL_STORAGE`, `SYSTEM_ALERT_WINDOW` et `RECORD_AUDIO` sont dans `blockedPermissions`.
+- Seule permission Android ajoutée : `REQUEST_INSTALL_PACKAGES` (mises à jour intégrées) ; `READ/WRITE_EXTERNAL_STORAGE`, `SYSTEM_ALERT_WINDOW`, `RECORD_AUDIO`, `USE_BIOMETRIC` et `USE_FINGERPRINT` sont dans `blockedPermissions`.
 
 Tout nouvel import (nouveau format, nouveau champ) suit le même modèle : schéma zod par entrée, rejet total à la première anomalie, message affichable.
 
@@ -157,6 +159,16 @@ Scope `drive.appdata` uniquement (classé « non sensible » par Google) : l'app
 4. Reconstruire l'APK (module natif `@react-native-google-signin/google-signin`).
 
 `oauth-misconfigured` (DEVELOPER_ERROR) : l'étape 3 ne correspond pas à l'APK. `drive-api-disabled` : étape 1 oubliée. Détails : README de [`@forthtilliath/expo-backup`](https://www.npmjs.com/package/@forthtilliath/expo-backup).
+
+## Mises à jour intégrées
+
+L'app se met à jour depuis les releases GitHub du dépôt (public : aucun jeton dans l'APK), via [`@forthtilliath/expo-release-updates`](https://www.npmjs.com/package/@forthtilliath/expo-release-updates) ([updates.ts](src/updates.ts)) :
+
+- **Au lancement** ([UpdateBanner.tsx](src/components/UpdateBanner.tsx), `UpdateNotifier`) : au plus une vérification toutes les 12 h ; bannière « Installer / Ignorer ». Une version ignorée n'est plus annoncée, la suivante si. Date de vérification et version ignorée : clé `onsortkoi:update-check:v1`, validée par zod ([updateCheck.ts](src/domain/updateCheck.ts)), hors des sauvegardes.
+- **Réglages ▸ Mises à jour** (`UpdateSettingsScreen` du kit) : version installée, vérification manuelle, historique des 10 dernières releases.
+- La version comparée est `version` d'[app.json](app.json) ; la release la plus récente doit porter un tag `vX.Y.Z` et un asset `.apk` (son nom est libre : `Onsortkoi-X.Y.Z.apk`). Ses notes sont affichées (sous-ensemble Markdown : `### titre`, `- élément`, `**gras**`).
+
+Sécurité : le téléchargement n'accepte qu'une URL `https://github.com`, et Android refuse d'installer un APK qui n'est pas signé avec la même clé que l'app installée. La protection repose donc sur la clé d'upload (hors du dépôt) et sur qui peut publier une release. Permission requise : `REQUEST_INSTALL_PACKAGES` (l'utilisateur doit en plus autoriser l'app comme source d'installation, à la première mise à jour).
 
 ## Conventions
 
