@@ -7,8 +7,8 @@ import type { Game, StoredCollection } from './domain/types';
 
 export type { StoredCollection } from './domain/types';
 
-const KEY = 'ludocollec:collection:v1';
-const SETTINGS_KEY = 'ludocollec:settings:v1';
+const KEY = 'onsortkoi:collection:v1';
+const SETTINGS_KEY = 'onsortkoi:settings:v1';
 
 // Revalide ce qui a été enregistré : une donnée corrompue est ignorée plutôt que d'être affichée.
 export async function loadCollection(): Promise<StoredCollection | null> {
