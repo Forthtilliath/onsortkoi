@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 
+import { storedCollectionSchema } from '../gameSchema';
 import { importCollection, MAX_GAMES } from '../importSchema';
 
 const entry = (overrides: Record<string, unknown> = {}) => ({
@@ -107,5 +108,15 @@ describe('importCollection', () => {
     const result = importCollection(readFileSync(exportPath!, 'utf8'));
     if (!result.ok) throw new Error(result.error);
     expect(result.games.length).toBeGreaterThan(0);
+    // La collection enregistrée doit passer la revalidation au prochain lancement.
+    const stored = { importedAt: new Date().toISOString(), games: result.games };
+    expect(storedCollectionSchema.safeParse(stored).error).toBeUndefined();
+  });
+
+  it('produit une collection qui passe la revalidation du stockage', () => {
+    const result = run([entry(), entry({ ID: 2, 'Joueur(s)': '0 — 4', 'Age(s)': '0+', 'Note personnelle': 10 })]);
+    if (!result.ok) throw new Error(result.error);
+    const stored = { importedAt: new Date().toISOString(), games: result.games };
+    expect(storedCollectionSchema.safeParse(stored).error).toBeUndefined();
   });
 });
