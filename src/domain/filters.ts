@@ -21,6 +21,15 @@ export const EMPTY_FILTERS: Filters = {
   tags: { categories: [], themes: [], mechanisms: [] },
 };
 
+/** Dernier choix du filtre joueurs, « 10+ » : 10 joueurs ou plus. */
+export const PLAYERS_OR_MORE = 10;
+
+/** « 3 joueurs », « 10+ joueurs ». */
+export function playersLabel(players: number): string {
+  const plus = players >= PLAYERS_OR_MORE ? '+' : '';
+  return `${players}${plus} joueur${players > 1 ? 's' : ''}`;
+}
+
 /** Types jouables seuls ; un type vide (non renseigné) est traité comme un jeu de base. */
 const STANDALONE_TYPES = new Set(['', 'basegame', 'standalone']);
 
@@ -64,7 +73,10 @@ export const buildSearchIndex = (games: Game[]): SearchIndex => new Map(games.ma
 
 function playable(range: Range | null, players: number): boolean {
   if (!range) return false;
-  return players >= range.min && (range.max === null || players <= range.max);
+  const max = range.max ?? Infinity;
+  // « 10+ » : le jeu doit accepter au moins 10 joueurs, quel que soit son minimum.
+  if (players >= PLAYERS_OR_MORE) return max >= players;
+  return players >= range.min && players <= max;
 }
 
 function matchesTags(game: Game, tags: Filters['tags']): boolean {
