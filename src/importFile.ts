@@ -14,11 +14,13 @@ export async function pickJsonText(): Promise<PickedText | null> {
   });
   if (picked.canceled) return null;
 
+  const tooLarge = { ok: false, error: "Fichier trop volumineux (10 Mo maximum).\nRien n'a été modifié." } as const;
   try {
-    if (picked.result.size > MAX_FILE_BYTES) {
-      return { ok: false, error: "Fichier trop volumineux (10 Mo maximum).\nRien n'a été modifié." };
-    }
-    return { ok: true, text: await picked.result.text() };
+    if (picked.result.size > MAX_FILE_BYTES) return tooLarge;
+    const text = await picked.result.text();
+    // `size` vaut 0 quand le fournisseur ne la donne pas : la longueur lue est vérifiée aussi.
+    if (text.length > MAX_FILE_BYTES) return tooLarge;
+    return { ok: true, text };
   } catch (error) {
     if (__DEV__) console.warn('Lecture du fichier impossible', error);
     return { ok: false, error: "Impossible de lire ce fichier.\nRien n'a été modifié." };
