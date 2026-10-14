@@ -1,5 +1,7 @@
 import { BackupScreen } from '@forthtilliath/expo-backup-ui';
+import { compareVersions } from '@forthtilliath/expo-release-updates/compareVersions';
 import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
+import { UpdateSettingsScreen } from '@forthtilliath/react-native-kit/components/settings/UpdateSettingsScreen';
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,10 +13,11 @@ import type { Game } from '../domain/types';
 import type { StoredCollection } from '../storage';
 import { Icon } from '../ui/Icon';
 import { IconButton } from '../ui/IconButton';
-import { backupScreenStyles, switchColors } from '../ui/kitStyles';
+import { backupScreenStyles, switchColors, updateScreenStyles } from '../ui/kitStyles';
 import { PrimaryButton } from '../ui/PrimaryButton';
 import { Section } from '../ui/Section';
 import { colors, radius, spacing } from '../ui/theme';
+import { checkForUpdate, currentVersion, fetchHistory, installApk } from '../updates';
 import { TagChecklist } from './TagChecklist';
 
 type ChoiceGroup = 'mechanisms' | 'themes';
@@ -116,6 +119,17 @@ export function SettingsScreen({
               manager={backup}
               describeBackup={(data) => `${data.collection.games.length} jeux`}
               styles={backupScreenStyles}
+            />
+          </Section>
+
+          <Section title="Mises à jour">
+            <UpdateSettingsScreen
+              currentVersion={currentVersion}
+              checkForUpdate={checkForUpdate}
+              compareVersions={compareVersions}
+              downloadAndInstallApk={installApk}
+              fetchReleaseHistory={fetchHistory}
+              styles={updateScreenStyles}
             />
           </Section>
         </ScrollView>

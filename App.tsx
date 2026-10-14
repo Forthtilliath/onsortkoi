@@ -13,6 +13,7 @@ import { GameCard } from './src/components/game/GameCard';
 import { GameSheet } from './src/components/game/GameSheet';
 import { NoResults } from './src/components/NoResults';
 import { SettingsScreen } from './src/components/SettingsScreen';
+import { UpdateBanner } from './src/components/UpdateBanner';
 import { clearCriteria } from './src/domain/activeFilters';
 import { filtersForTag, isStandalone } from './src/domain/filters';
 import type { Settings } from './src/domain/settings';
@@ -69,6 +70,7 @@ function Main() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <AppHeader gameCount={baseGameCount} onOpenSettings={() => setPanel('settings')} />
+      <UpdateBanner />
 
       {loading ? (
         <ActivityIndicator style={styles.loader} color={colors.primary} />
