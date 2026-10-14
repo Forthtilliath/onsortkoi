@@ -62,9 +62,7 @@ export function useFirstImport(importGames: (games: Game[]) => Promise<void>) {
           );
           return;
         }
-        // Le téléphone est vide : la sauvegarde Drive s'applique d'abord, pour que la copie
-        // de sécurité faite par `resolveConflict` ait des données à copier.
-        await applyBackupData(result.remote);
+        // Téléphone vide : `hasLocalData` évite à `resolveConflict` une copie de sécurité impossible.
         await backup.resolveConflict(result, 'cloud');
         announceRestored(result.remote);
       }),

@@ -31,6 +31,8 @@ export const backup = createBackupManager<Backup>({
     if (!collection) throw new Error('Aucune collection à sauvegarder.');
     return { collection, settings: await loadSettings() };
   },
+  // Premier lancement ou nouveau téléphone : restaurer sans copie de sécurité (rien à annuler).
+  hasLocalData: async () => (await loadCollection()) !== null,
   serialize: ({ collection, settings }) => createBackup(collection, settings),
   parse(text) {
     const result = readBackup(text);
