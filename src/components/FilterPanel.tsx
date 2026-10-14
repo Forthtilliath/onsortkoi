@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 import { countActiveFilters, EMPTY_FILTERS, type Filters } from '../domain/filters';
-import { TAG_GROUPS, type TagGroup } from '../domain/types';
-import { Chip } from '../ui/Chip';
+import type { TagGroup } from '../domain/types';
+import { MultiChipRow } from '../ui/MultiChipRow';
 import { OptionRow } from '../ui/OptionRow';
 import { colors, radius, spacing } from '../ui/theme';
 
@@ -13,14 +13,18 @@ const AGE_OPTIONS = [4, 6, 8, 10, 12, 14];
 const formatMinutes = (minutes: number) =>
   minutes < 60 ? `${minutes} min` : `${minutes / 60} h`.replace('.5 h', ' h 30');
 
+export type TagOption = { group: TagGroup; label: string; tags: string[] };
+
 type Props = {
   filters: Filters;
   onChange: (filters: Filters) => void;
-  onOpenTags: () => void;
+  /** Groupes de tags proposés comme filtres (selon les réglages) ; les groupes vides sont omis. */
+  tagOptions: TagOption[];
+  onOpenSettings: () => void;
   resultCount: number;
 };
 
-export function FilterPanel({ filters, onChange, onOpenTags, resultCount }: Props) {
+export function FilterPanel({ filters, onChange, tagOptions, onOpenSettings, resultCount }: Props) {
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) => onChange({ ...filters, [key]: value });
 
   // Garde min ≤ max : choisir une borne incompatible efface l'autre.
@@ -34,10 +38,6 @@ export function FilterPanel({ filters, onChange, onOpenTags, resultCount }: Prop
     onChange({ ...filters, [key]: value, ...(conflict && { [other]: null }) });
   };
 
-  const removeTag =(group: TagGroup, tag: string) =>
-    set('tags', { ...filters.tags, [group]: filters.tags[group].filter((t) => t !== tag) });
-
-  const selectedTags = TAG_GROUPS.flatMap(({ key }) => filters.tags[key].map((tag) => ({ group: key, tag })));
   const activeCount = countActiveFilters(filters);
 
   return (
@@ -91,19 +91,21 @@ export function FilterPanel({ filters, onChange, onOpenTags, resultCount }: Prop
         />
       </View>
 
-      <Pressable
-        onPress={onOpenTags}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.tagButton, pressed && styles.pressed]}
-      >
-        <Text style={styles.tagButtonText}>Catégories, thèmes, mécanismes…</Text>
-      </Pressable>
-      {selectedTags.length > 0 && (
-        <View style={styles.selectedTags}>
-          {selectedTags.map(({ group, tag }) => (
-            <Chip key={`${group}:${tag}`} label={tag} selected removable onPress={() => removeTag(group, tag)} />
-          ))}
-        </View>
+      {tagOptions.map(({ group, label, tags }) => (
+        <MultiChipRow
+          key={group}
+          label={label}
+          options={tags}
+          selected={filters.tags[group]}
+          onChange={(selected) => set('tags', { ...filters.tags, [group]: selected })}
+        />
+      ))}
+      {!tagOptions.some((o) => o.group !== 'categories') && (
+        <Pressable onPress={onOpenSettings} accessibilityRole="button">
+          <Text style={styles.hint}>
+            Astuce : choisis dans <Text style={styles.link}>Réglages</Text> les mécanismes et thèmes à proposer ici.
+          </Text>
+        </Pressable>
       )}
 
       <View style={styles.footer}>
@@ -134,16 +136,8 @@ const styles = StyleSheet.create({
   },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   switchLabel: { color: colors.text, fontSize: 14, flex: 1 },
-  tagButton: {
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  pressed: { opacity: 0.7 },
-  tagButtonText: { color: colors.primary, fontWeight: '600', fontSize: 15 },
-  selectedTags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  hint: { color: colors.muted, fontSize: 13 },
+  link: { color: colors.primary, fontWeight: '600' },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: spacing.xs },
   count: { color: colors.text, fontSize: 15, fontWeight: '700' },
   reset: { color: colors.primary, fontSize: 14, fontWeight: '600' },

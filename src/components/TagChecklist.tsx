@@ -2,57 +2,38 @@ import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { collectTags, normalize, type Filters } from '../domain/filters';
-import { TAG_GROUPS, type Game, type TagGroup } from '../domain/types';
-import { Chip } from '../ui/Chip';
+import { normalize, type TagCount } from '../domain/filters';
 import { colors, radius, spacing } from '../ui/theme';
 
 type Props = {
   visible: boolean;
-  games: Game[];
-  selected: Filters['tags'];
-  onChange: (tags: Filters['tags']) => void;
+  title: string;
+  tags: TagCount[];
+  selected: string[];
+  onChange: (selected: string[]) => void;
   onClose: () => void;
 };
 
-export function TagPicker({ visible, games, selected, onChange, onClose }: Props) {
-  const [group, setGroup] = useState<TagGroup>('categories');
+/** Liste à cocher plein écran, avec recherche et nombre de jeux par tag. */
+export function TagChecklist({ visible, title, tags, selected, onChange, onClose }: Props) {
   const [query, setQuery] = useState('');
 
-  const tags = useMemo(() => collectTags(games, group), [games, group]);
   const visibleTags = useMemo(() => {
     const q = normalize(query);
     return q ? tags.filter((t) => normalize(t.name).includes(q)) : tags;
   }, [tags, query]);
 
-  const toggle = (tag: string) => {
-    const current = selected[group];
-    const next = current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag];
-    onChange({ ...selected, [group]: next });
-  };
+  const toggle = (tag: string) =>
+    onChange(selected.includes(tag) ? selected.filter((t) => t !== tag) : [...selected, tag]);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.screen}>
         <View style={styles.header}>
-          <Text style={styles.title}>Affiner par…</Text>
+          <Text style={styles.title}>{title}</Text>
           <Pressable onPress={onClose} accessibilityRole="button" hitSlop={12}>
             <Text style={styles.done}>Terminé</Text>
           </Pressable>
-        </View>
-
-        <View style={styles.tabs}>
-          {TAG_GROUPS.map(({ key, label }) => {
-            const count = selected[key].length;
-            return (
-              <Chip
-                key={key}
-                label={count ? `${label} (${count})` : label}
-                selected={group === key}
-                onPress={() => setGroup(key)}
-              />
-            );
-          })}
         </View>
 
         <TextInput
@@ -64,14 +45,23 @@ export function TagPicker({ visible, games, selected, onChange, onClose }: Props
           autoCorrect={false}
           maxLength={100}
         />
-        <Text style={styles.hint}>Plusieurs choix dans un même onglet : au moins un doit correspondre.</Text>
+        <View style={styles.toolbar}>
+          <Text style={styles.hint}>
+            {selected.length} coché{selected.length > 1 ? 's' : ''} sur {tags.length}
+          </Text>
+          {selected.length > 0 && (
+            <Pressable onPress={() => onChange([])} accessibilityRole="button" hitSlop={8}>
+              <Text style={styles.clear}>Tout décocher</Text>
+            </Pressable>
+          )}
+        </View>
 
         <FlatList
           data={visibleTags}
           keyExtractor={(item) => item.name}
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => {
-            const checked = selected[group].includes(item.name);
+            const checked = selected.includes(item.name);
             return (
               <Pressable
                 onPress={() => toggle(item.name)}
@@ -102,7 +92,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 20, fontWeight: '700', color: colors.text },
   done: { fontSize: 16, fontWeight: '700', color: colors.primary },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   search: {
     backgroundColor: colors.card,
     borderWidth: 1,
@@ -113,7 +102,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
-  hint: { color: colors.muted, fontSize: 12, marginVertical: spacing.sm },
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: spacing.sm,
+  },
+  hint: { color: colors.muted, fontSize: 12 },
+  clear: { color: colors.primary, fontSize: 13, fontWeight: '600' },
   item: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -24,9 +24,3 @@ export type Game = {
 };
 
 export type TagGroup = 'categories' | 'themes' | 'mechanisms';
-
-export const TAG_GROUPS: { key: TagGroup; label: string }[] = [
-  { key: 'categories', label: 'Catégories' },
-  { key: 'themes', label: 'Thèmes' },
-  { key: 'mechanisms', label: 'Mécanismes' },
-];
