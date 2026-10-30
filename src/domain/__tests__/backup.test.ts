@@ -1,5 +1,6 @@
-import { backupFileName, createBackup, readBackup } from '../backup';
+import { type Backup, backupFileName, createBackup, readBackup } from '../backup';
 import { DEFAULT_SETTINGS } from '../settings';
+import type { Sleeve } from '../sleeves';
 import type { Game, StoredCollection } from '../types';
 
 const game = (overrides: Partial<Game> = {}): Game => ({
@@ -22,15 +23,33 @@ const game = (overrides: Partial<Game> = {}): Game => ({
 
 const collection: StoredCollection = { importedAt: '2026-10-01T18:30:00.000Z', games: [game()] };
 const settings = { showCategories: false, themes: ['Antiquité'], mechanisms: [] };
+const sleeves: Sleeve[] = [
+  { id: 1, name: 'Mayday Premium', width: 63.5, height: 88, stock: 120, games: [{ gameId: 4680, note: 'merveilles' }] },
+];
+const saved: Backup = { collection, settings, sleeves };
 
 /** Sauvegarde valide, modifiable avant d'être relue. */
-const backupData = () => JSON.parse(createBackup(collection, settings)) as Record<string, any>;
+const backupData = () => JSON.parse(createBackup(saved)) as Record<string, any>;
 const read = (data: unknown) => readBackup(JSON.stringify(data));
 
 describe('readBackup', () => {
   it('relit une sauvegarde créée par createBackup', () => {
-    const result = readBackup(createBackup(collection, settings));
-    expect(result).toEqual({ ok: true, backup: { collection, settings } });
+    const result = readBackup(createBackup(saved));
+    expect(result).toEqual({ ok: true, backup: saved });
+  });
+
+  it('relit une sauvegarde de version 1, sans sleeves', () => {
+    const data = backupData();
+    data.version = 1;
+    delete data.sleeves;
+    expect(read(data)).toEqual({ ok: true, backup: { collection, settings, sleeves: [] } });
+  });
+
+  it('garde les sleeves associées à un jeu absent de la collection', () => {
+    const data = backupData();
+    data.sleeves[0].games.push({ gameId: 999, note: '' });
+    const result = read(data);
+    expect(result.ok && result.backup.sleeves[0].games).toHaveLength(2);
   });
 
   it('supprime les clés inconnues', () => {
@@ -38,11 +57,13 @@ describe('readBackup', () => {
     data.extra = 'x';
     data.collection.games[0].prixAchat = 42;
     data.settings.token = 'secret';
+    data.sleeves[0].prix = 9.9;
     const result = read(data);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.backup.collection.games[0]).not.toHaveProperty('prixAchat');
     expect(result.backup.settings).toEqual(settings);
+    expect(result.backup.sleeves).toEqual(sleeves);
   });
 
   it.each([
@@ -56,7 +77,7 @@ describe('readBackup', () => {
 
   it('refuse une autre version du format', () => {
     const data = backupData();
-    data.version = 2;
+    data.version = 3;
     expect(read(data)).toEqual({ ok: false, error: expect.stringContaining('autre version') });
   });
 
@@ -73,6 +94,10 @@ describe('readBackup', () => {
     ['une date invalide', (d) => (d.collection.importedAt = 'hier')],
     ['des réglages invalides', (d) => (d.settings.showCategories = 'oui')],
     ['des réglages absents', (d) => delete d.settings],
+    ['des sleeves absentes en version 2', (d) => delete d.sleeves],
+    ['un stock de sleeves négatif', (d) => (d.sleeves[0].stock = -5)],
+    ['un format de sleeves invalide', (d) => (d.sleeves[0].width = 'grand')],
+    ['une note de sleeves trop longue', (d) => (d.sleeves[0].games[0].note = 'x'.repeat(101))],
   ])('rejette tout le fichier pour %s', (_label, corrupt) => {
     const data = backupData();
     corrupt(data);
@@ -91,8 +116,17 @@ describe('readBackup', () => {
     expect(result.error).toContain('Jeu n°2 (« Azul ») — champ « age »');
   });
 
-  it('accepte les réglages par défaut', () => {
-    expect(readBackup(createBackup(collection, DEFAULT_SETTINGS)).ok).toBe(true);
+  it('situe une erreur sur des sleeves', () => {
+    const data = backupData();
+    data.sleeves[0].stock = -5;
+    const result = read(data);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toContain('Sleeves n°1 (« Mayday Premium ») — champ « stock »');
+  });
+
+  it('accepte les réglages par défaut et aucune sleeve', () => {
+    expect(readBackup(createBackup({ collection, settings: DEFAULT_SETTINGS, sleeves: [] })).ok).toBe(true);
   });
 });
 

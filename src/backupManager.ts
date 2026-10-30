@@ -1,12 +1,12 @@
 import { createBackupManager } from '@forthtilliath/expo-backup';
 
 import { backupFileName, createBackup, readBackup, type Backup } from './domain/backup';
-import { loadCollection, loadSettings, saveBackup } from './storage';
+import { loadCollection, loadSettings, loadSleeves, saveBackup } from './storage';
 
 type Listener = (backup: Backup) => void;
 let onApplied: Listener | null = null;
 
-/** L'app se met à jour (collection et réglages en mémoire) après chaque restauration. */
+/** L'app se met à jour (collection, réglages et sleeves en mémoire) après chaque restauration. */
 export function setBackupAppliedListener(listener: Listener | null): void {
   onApplied = listener;
 }
@@ -29,11 +29,11 @@ export const backup = createBackupManager<Backup>({
     const collection = await loadCollection();
     // Rien à envoyer tant qu'aucune collection n'est importée : l'envoi attend le prochain changement.
     if (!collection) throw new Error('Aucune collection à sauvegarder.');
-    return { collection, settings: await loadSettings() };
+    return { collection, settings: await loadSettings(), sleeves: await loadSleeves() };
   },
   // Premier lancement ou nouveau téléphone : restaurer sans copie de sécurité (rien à annuler).
   hasLocalData: async () => (await loadCollection()) !== null,
-  serialize: ({ collection, settings }) => createBackup(collection, settings),
+  serialize: (data) => createBackup(data),
   parse(text) {
     const result = readBackup(text);
     if (!result.ok) throw new Error(result.error);

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { Backup } from './domain/backup';
 import { settingsSchema, storedCollectionSchema } from './domain/gameSchema';
 import { DEFAULT_SETTINGS, type Settings } from './domain/settings';
+import { type Sleeve, sleevesSchema } from './domain/sleeves';
 import type { Game, StoredCollection } from './domain/types';
 import { EMPTY_UPDATE_CHECK, parseUpdateCheck, type UpdateCheck } from './domain/updateCheck';
 
@@ -14,6 +15,8 @@ const KEY = 'onsortkoi:collection:v1';
 const SETTINGS_KEY = 'onsortkoi:settings:v1';
 const UPDATE_CHECK_KEY = 'onsortkoi:update-check:v1';
 const THEME_KEY = 'onsortkoi:theme:v1';
+// À part de la collection : un réimport MyLudo remplace les jeux mais jamais les sleeves.
+const SLEEVES_KEY = 'onsortkoi:sleeves:v1';
 
 // Revalide ce qui a été enregistré : une donnée corrompue est ignorée plutôt que d'être affichée.
 export async function loadCollection(): Promise<StoredCollection | null> {
@@ -48,6 +51,21 @@ export async function saveSettings(settings: Settings): Promise<void> {
   await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
+export async function loadSleeves(): Promise<Sleeve[]> {
+  try {
+    const raw = await AsyncStorage.getItem(SLEEVES_KEY);
+    if (!raw) return [];
+    const result = sleevesSchema.safeParse(JSON.parse(raw));
+    return result.success ? result.data : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveSleeves(sleeves: Sleeve[]): Promise<void> {
+  await AsyncStorage.setItem(SLEEVES_KEY, JSON.stringify(sleeves));
+}
+
 export async function loadUpdateCheck(): Promise<UpdateCheck> {
   try {
     return parseUpdateCheck(await AsyncStorage.getItem(UPDATE_CHECK_KEY));
@@ -77,10 +95,11 @@ export async function saveThemePreference(preference: ThemePreference): Promise<
   await AsyncStorage.setItem(THEME_KEY, preference).catch(() => {});
 }
 
-/** Enregistre une sauvegarde validée : collection et réglages en une seule écriture. */
-export async function saveBackup({ collection, settings }: Backup): Promise<void> {
+/** Enregistre une sauvegarde validée : collection, réglages et sleeves en une seule écriture. */
+export async function saveBackup({ collection, settings, sleeves }: Backup): Promise<void> {
   await AsyncStorage.multiSet([
     [KEY, JSON.stringify(collection)],
     [SETTINGS_KEY, JSON.stringify(settings)],
+    [SLEEVES_KEY, JSON.stringify(sleeves)],
   ]);
 }

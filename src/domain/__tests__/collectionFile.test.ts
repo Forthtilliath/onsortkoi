@@ -34,13 +34,13 @@ describe('readCollectionFile', () => {
   });
 
   it('reconnaît une sauvegarde Onsortkoi', () => {
-    const result = readCollectionFile(createBackup(collection, settings));
-    expect(result).toEqual({ ok: true, kind: 'backup', backup: { collection, settings } });
+    const result = readCollectionFile(createBackup({ collection, settings, sleeves: [] }));
+    expect(result).toEqual({ ok: true, kind: 'backup', backup: { collection, settings, sleeves: [] } });
   });
 
   it('garde la validation complète de chaque format', () => {
     expect(readCollectionFile(JSON.stringify([{ ...myludoEntry, ID: -1 }])).ok).toBe(false);
-    const backup = JSON.parse(createBackup(collection, settings));
+    const backup = JSON.parse(createBackup({ collection, settings, sleeves: [] }));
     backup.collection.games[0].title = '';
     expect(readCollectionFile(JSON.stringify(backup)).ok).toBe(false);
   });
