@@ -17,7 +17,8 @@ const REPO = { owner: 'Forthtilliath', repo: 'onsortkoi' } as const;
 
 export const currentVersion = Constants.expoConfig?.version ?? '0.0.0';
 
-export const checkForUpdate = () => fetchLatestRelease(REPO);
+/** Une release sans SHA-256, ou hors de ce dépôt, n'est pas proposée : l'installation la refuserait. */
+export const checkForUpdate = () => fetchLatestRelease({ ...REPO, requireVerifiedApk: true });
 
 export const fetchHistory = () => fetchReleaseHistory({ ...REPO, limit: 10 });
 
