@@ -1,5 +1,5 @@
 import { useResolvedScheme } from '@forthtilliath/react-native-kit/components/theme/themePreferenceContext';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 
 export type Palette = {
   scheme: 'light' | 'dark';
@@ -89,7 +89,10 @@ export function byPalette<T>(factory: (c: Palette) => T): () => T {
   };
 }
 
+/** Ex-`StyleSheet.NamedStyles`, retiré de l'API TypeScript stricte de React Native. */
+type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
+
 /** `StyleSheet.create` aux couleurs du thème en cours, une feuille par palette. */
-export function themedStyles<T extends StyleSheet.NamedStyles<T>>(factory: (c: Palette) => T): () => T {
+export function themedStyles<T extends NamedStyles<T>>(factory: (c: Palette) => T): () => T {
   return byPalette((c) => StyleSheet.create(factory(c)));
 }
