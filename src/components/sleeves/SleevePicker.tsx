@@ -1,6 +1,7 @@
-import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
 import { useMemo } from 'react';
 import { Text } from 'react-native';
+
+import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
 
 import { type FormatGroup, formatLabel, plural, type Sleeve } from '../../domain/sleeves';
 import { Card, CardRow } from '../../ui/CardRow';
@@ -9,14 +10,14 @@ import { ScreenModal } from '../../ui/ScreenModal';
 import { Section } from '../../ui/Section';
 import { themedStyles } from '../../ui/theme';
 
-type Props = {
+interface Props {
   gameTitle: string;
   gameId: number;
   groups: FormatGroup[];
   onPick: (sleeve: Sleeve) => void;
   onCreate: () => void;
   onClose: () => void;
-};
+}
 
 /** Choix des sleeves à associer à un jeu, par format ; celles déjà associées sont masquées. */
 export function SleevePicker({ gameTitle, gameId, groups, onPick, onCreate, onClose }: Props) {
@@ -49,7 +50,9 @@ export function SleevePicker({ gameTitle, gameId, groups, onPick, onCreate, onCl
                 title={sleeve.name}
                 value={String(sleeve.stock)}
                 accessibilityLabel={`${sleeve.name}, ${plural(sleeve.stock, 'restante')}`}
-                onPress={() => onPick(sleeve)}
+                onPress={() => {
+                  onPick(sleeve);
+                }}
               />
             ))}
           </Card>

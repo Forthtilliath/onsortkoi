@@ -21,14 +21,18 @@ const game = (overrides: Partial<Game>): Game => ({
 
 describe('gameAccessibilityLabel', () => {
   it('décrit la carte en toutes lettres pour TalkBack', () => {
-    expect(gameAccessibilityLabel(game({}))).toBe(
-      'Azul, 2 à 4 joueurs, 30 à 45 minutes, dès 8 ans, ma note 8 sur 10',
-    );
+    expect(gameAccessibilityLabel(game({}))).toBe('Azul, 2 à 4 joueurs, 30 à 45 minutes, dès 8 ans, ma note 8 sur 10');
   });
 
   it('lit les intervalles ouverts, les valeurs seules et le type', () => {
     const label = gameAccessibilityLabel(
-      game({ type: 'extension', players: { min: 2, max: null }, duration: { min: 1, max: 1 }, age: null, rating: null }),
+      game({
+        type: 'extension',
+        players: { min: 2, max: null },
+        duration: { min: 1, max: 1 },
+        age: null,
+        rating: null,
+      }),
     );
     expect(label).toBe('Azul, Extension, 2 joueurs ou plus, 1 minute');
   });

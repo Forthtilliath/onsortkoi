@@ -37,7 +37,7 @@ export function sortGames(games: Game[], sort: SortKey): Game[] {
 
 /** Lettre d'index d'un titre, sans accent ; `#` pour un chiffre ou un symbole. */
 export function indexLetter(title: string): string {
-  const first = normalize(title).match(/[\p{L}\p{N}]/u)?.[0];
+  const first = /[\p{L}\p{N}]/u.exec(normalize(title))?.[0];
   return first && /\p{L}/u.test(first) ? first.toUpperCase() : '#';
 }
 

@@ -4,8 +4,8 @@ import {
   collectTags,
   EMPTY_FILTERS,
   facetTags,
-  type Filters,
   filterGames,
+  type Filters,
   filtersForTag,
   playersLabel,
 } from '../filters';
@@ -30,9 +30,30 @@ const game = (overrides: Partial<Game>): Game => ({
 });
 
 const games: Game[] = [
-  game({ id: 1, title: 'Zombicide', players: { min: 1, max: 6 }, duration: { min: 60, max: 120 }, age: 14, mechanisms: ['Coopératif', 'Dés'] }),
-  game({ id: 2, title: 'Écoute-moi', players: { min: 2, max: null }, duration: { min: 15, max: 15 }, age: 8, categories: ["Jeu d'Ambiance"] }),
-  game({ id: 3, title: 'Azul', players: { min: 2, max: 4 }, duration: { min: 45, max: 45 }, age: 8, categories: ['Jeu de tuiles'] }),
+  game({
+    id: 1,
+    title: 'Zombicide',
+    players: { min: 1, max: 6 },
+    duration: { min: 60, max: 120 },
+    age: 14,
+    mechanisms: ['Coopératif', 'Dés'],
+  }),
+  game({
+    id: 2,
+    title: 'Écoute-moi',
+    players: { min: 2, max: null },
+    duration: { min: 15, max: 15 },
+    age: 8,
+    categories: ["Jeu d'Ambiance"],
+  }),
+  game({
+    id: 3,
+    title: 'Azul',
+    players: { min: 2, max: 4 },
+    duration: { min: 45, max: 45 },
+    age: 8,
+    categories: ['Jeu de tuiles'],
+  }),
   game({ id: 4, title: 'Azul : extension', type: 'extension' }),
   game({ id: 5, title: 'Sans infos', players: null, duration: null, age: null }),
 ];
@@ -107,7 +128,10 @@ describe('collectTags', () => {
 });
 
 describe('facetTags', () => {
-  const lcg = [...games, game({ id: 6, title: 'Extension JCE', type: 'extension', categories: ['Jeu de cartes évolutif'] })];
+  const lcg = [
+    ...games,
+    game({ id: 6, title: 'Extension JCE', type: 'extension', categories: ['Jeu de cartes évolutif'] }),
+  ];
   const facet = (f: Partial<Filters>) => facetTags(lcg, { ...EMPTY_FILTERS, ...f }, 'categories');
 
   it('ignore les extensions masquées', () => {

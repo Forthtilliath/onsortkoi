@@ -1,6 +1,6 @@
 import { createBackupManager } from '@forthtilliath/expo-backup';
 
-import { backupFileName, createBackup, readBackup, type Backup } from './domain/backup';
+import { type Backup, backupFileName, createBackup, readBackup } from './domain/backup';
 import { loadCollection, loadSettings, loadSleeves, saveBackup } from './storage';
 
 type Listener = (backup: Backup) => void;

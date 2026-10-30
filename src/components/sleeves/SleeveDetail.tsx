@@ -1,7 +1,8 @@
-import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
-import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
 import { useMemo, useState } from 'react';
 import { Text } from 'react-native';
+
+import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
+import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
 
 import { compareText } from '../../domain/filters';
 import {
@@ -23,19 +24,24 @@ import { ScreenModal } from '../../ui/ScreenModal';
 import { Section } from '../../ui/Section';
 import { themedStyles } from '../../ui/theme';
 import { useSleeves } from '../../useSleeves';
+
 import { GamePicker } from './GamePicker';
 import { LinkEditor } from './LinkEditor';
 import { SleeveForm } from './SleeveForm';
 import { StockAdjuster } from './StockAdjuster';
 
-type Props = {
+interface Props {
   sleeve: Sleeve;
   games: Game[];
   formats: FormatGroup[];
   onClose: () => void;
-};
+}
 
-type Editing = { gameId: number; title: string; note?: string };
+interface Editing {
+  gameId: number;
+  title: string;
+  note?: string;
+}
 
 /** Absent de la collection après un réimport MyLudo : l'association est gardée, à retirer à la main. */
 const missingTitle = 'Jeu absent de la collection';
@@ -59,7 +65,7 @@ export function SleeveDetail({ sleeve, games, formats, onClose }: Props) {
   );
   const linkedIds = useMemo(() => new Set(sleeve.games.map((l) => l.gameId)), [sleeve.games]);
 
-  const remove = () =>
+  const remove = () => {
     confirmDestructive(
       'Supprimer ces sleeves ?',
       () => {
@@ -71,10 +77,16 @@ export function SleeveDetail({ sleeve, games, formats, onClose }: Props) {
         confirmLabel: 'Supprimer',
       },
     );
+  };
 
   return (
     <ScreenModal visible onClose={onClose} title={sleeve.name} subtitle={formatLabel(sleeve)}>
-      <StockAdjuster stock={sleeve.stock} onAdjust={(delta) => change((list) => adjustStock(list, sleeve.id, delta))} />
+      <StockAdjuster
+        stock={sleeve.stock}
+        onAdjust={(delta) => {
+          change((list) => adjustStock(list, sleeve.id, delta));
+        }}
+      />
 
       <Section title="Jeux qui les utilisent" aside={links.length ? String(links.length) : undefined}>
         {links.length > 0 ? (
@@ -86,20 +98,30 @@ export function SleeveDetail({ sleeve, games, formats, onClose }: Props) {
                 details={[link.title === missingTitle ? `Identifiant MyLudo ${link.gameId}` : '', link.note].filter(
                   Boolean,
                 )}
-                onPress={() => setEditing(link)}
+                onPress={() => {
+                  setEditing(link);
+                }}
               />
             ))}
           </Card>
         ) : (
           <Text style={styles.hint}>Aucun jeu pour l’instant.</Text>
         )}
-        <AddButton label="+ Associer un jeu" onPress={() => setPicking(true)} styles={kit.addButton} />
+        <AddButton
+          label="+ Associer un jeu"
+          onPress={() => {
+            setPicking(true);
+          }}
+          styles={kit.addButton}
+        />
       </Section>
 
       <PrimaryButton
         label="Modifier le nom, le format ou le stock"
         icon="create-outline"
-        onPress={() => setEditingSleeve(true)}
+        onPress={() => {
+          setEditingSleeve(true);
+        }}
         outline
       />
       <PrimaryButton label="Supprimer ces sleeves" icon="trash-outline" onPress={remove} outline />
@@ -113,7 +135,9 @@ export function SleeveDetail({ sleeve, games, formats, onClose }: Props) {
             setPicking(false);
             setEditing({ gameId: game.id, title: game.title });
           }}
-          onClose={() => setPicking(false)}
+          onClose={() => {
+            setPicking(false);
+          }}
         />
       )}
       {editing && (
@@ -130,7 +154,9 @@ export function SleeveDetail({ sleeve, games, formats, onClose }: Props) {
             change((list) => unlinkGame(list, sleeve.id, editing.gameId));
             setEditing(null);
           }}
-          onClose={() => setEditing(null)}
+          onClose={() => {
+            setEditing(null);
+          }}
         />
       )}
       {editingSleeve && (
@@ -142,7 +168,9 @@ export function SleeveDetail({ sleeve, games, formats, onClose }: Props) {
             change((list) => saveSleeve(list, draft, sleeve.id).sleeves);
             setEditingSleeve(false);
           }}
-          onClose={() => setEditingSleeve(false)}
+          onClose={() => {
+            setEditingSleeve(false);
+          }}
         />
       )}
     </ScreenModal>

@@ -4,10 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../ui/Icon';
 import { radius, spacing, themedStyles, useColors } from '../ui/theme';
 
-/** Hauteur du bouton, pour laisser la place sous la liste et au-dessus des toasts. */
-export const RANDOM_BUTTON_SPACE = 56 + spacing.lg;
-
-type Props = { count: number; onPress: () => void };
+interface Props {
+  count: number;
+  onPress: () => void;
+}
 
 /** Bouton flottant « Au hasard » : tire un jeu parmi ceux affichés. */
 export function RandomButton({ count, onPress }: Props) {

@@ -16,7 +16,11 @@ const backupSchema = z.object({
   sleeves: sleevesSchema,
 });
 
-export type Backup = { collection: StoredCollection; settings: Settings; sleeves: Sleeve[] };
+export interface Backup {
+  collection: StoredCollection;
+  settings: Settings;
+  sleeves: Sleeve[];
+}
 
 export type RestoreResult = { ok: true; backup: Backup } | { ok: false; error: string };
 
@@ -37,7 +41,7 @@ const fail = (error: string): RestoreResult => ({ ok: false, error: `${error}\nR
 export function readBackup(text: string): RestoreResult {
   let data: unknown;
   try {
-    data = JSON.parse(text.replace(/^﻿/, ''));
+    data = JSON.parse(text.replace(/^\uFEFF/, ''));
   } catch {
     return fail("Ce fichier n'est pas une sauvegarde Onsortkoi.");
   }

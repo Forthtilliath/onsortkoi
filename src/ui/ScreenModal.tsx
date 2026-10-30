@@ -6,7 +6,7 @@ import { IconButton } from './IconButton';
 import { spacing, themedStyles } from './theme';
 import { ToastHost } from './Toast';
 
-type Props = {
+interface Props {
   visible: boolean;
   onClose: () => void;
   title: string;
@@ -17,7 +17,7 @@ type Props = {
   /** `false` quand le contenu gère son propre défilement (FlatList). */
   scroll?: boolean;
   children: ReactNode;
-};
+}
 
 /**
  * Écran plein en modale, avec titre, action et fermeture. Les champs restent en haut :

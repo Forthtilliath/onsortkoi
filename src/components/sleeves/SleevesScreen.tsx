@@ -1,6 +1,7 @@
-import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
 import { useMemo, useState } from 'react';
 import { Text } from 'react-native';
+
+import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
 
 import { formatLabel, groupByFormat, plural, saveSleeve } from '../../domain/sleeves';
 import type { Game } from '../../domain/types';
@@ -10,14 +11,15 @@ import { ScreenModal } from '../../ui/ScreenModal';
 import { Section } from '../../ui/Section';
 import { themedStyles } from '../../ui/theme';
 import { useSleeves } from '../../useSleeves';
+
 import { SleeveDetail } from './SleeveDetail';
 import { SleeveForm } from './SleeveForm';
 
-type Props = {
+interface Props {
   visible: boolean;
   games: Game[];
   onClose: () => void;
-};
+}
 
 /** Stock de sleeves par format de carte, toutes marques confondues, puis produit par produit. */
 export function SleevesScreen({ visible, games, onClose }: Props) {
@@ -53,14 +55,22 @@ export function SleevesScreen({ visible, games, onClose }: Props) {
                 details={[sleeve.games.length ? plural(sleeve.games.length, 'jeu', 'jeux') : 'Aucun jeu']}
                 value={String(sleeve.stock)}
                 accessibilityLabel={`${sleeve.name}, ${plural(sleeve.stock, 'restante')}, ${plural(sleeve.games.length, 'jeu', 'jeux')}`}
-                onPress={() => setOpenId(sleeve.id)}
+                onPress={() => {
+                  setOpenId(sleeve.id);
+                }}
               />
             ))}
           </Card>
         </Section>
       ))}
 
-      <AddButton label="+ Ajouter des sleeves" onPress={() => setCreating(true)} styles={kit.addButton} />
+      <AddButton
+        label="+ Ajouter des sleeves"
+        onPress={() => {
+          setCreating(true);
+        }}
+        styles={kit.addButton}
+      />
 
       {creating && (
         <SleeveForm
@@ -77,10 +87,21 @@ export function SleevesScreen({ visible, games, onClose }: Props) {
             // Enchaîne sur la fiche du produit, pour y associer ses jeux.
             setOpenId(id);
           }}
-          onClose={() => setCreating(false)}
+          onClose={() => {
+            setCreating(false);
+          }}
         />
       )}
-      {opened && <SleeveDetail sleeve={opened} games={games} formats={groups} onClose={() => setOpenId(null)} />}
+      {opened && (
+        <SleeveDetail
+          sleeve={opened}
+          games={games}
+          formats={groups}
+          onClose={() => {
+            setOpenId(null);
+          }}
+        />
+      )}
     </ScreenModal>
   );
 }

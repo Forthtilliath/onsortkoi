@@ -1,5 +1,6 @@
-import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 import { Pressable, Text } from 'react-native';
+
+import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 
 import { clearCriteria, describeActiveFilters } from '../../domain/activeFilters';
 import { DURATION_BUCKETS, type DurationKey } from '../../domain/durations';
@@ -10,7 +11,8 @@ import { PrimaryButton } from '../../ui/PrimaryButton';
 import { Section } from '../../ui/Section';
 import { Sheet } from '../../ui/Sheet';
 import { themedStyles } from '../../ui/theme';
-import { type TagOption, TagFilterRows } from './TagFilterRows';
+
+import { TagFilterRows, type TagOption } from './TagFilterRows';
 
 const PLAYER_OPTIONS: ChoiceOption<number>[] = Array.from({ length: PLAYERS_OR_MORE }, (_, i) => i + 1).map((n) => ({
   value: n,
@@ -29,7 +31,7 @@ const AGE_OPTIONS: ChoiceOption<number>[] = [4, 6, 8, 10, 12, 14].map((age) => (
 
 const ANY = 'Peu importe';
 
-type Props = {
+interface Props {
   visible: boolean;
   onClose: () => void;
   filters: Filters;
@@ -38,16 +40,24 @@ type Props = {
   tagOptions: TagOption[];
   resultCount: number;
   onOpenSettings: () => void;
-};
+}
 
 export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, resultCount, onOpenSettings }: Props) {
   const styles = useStyles();
   const kit = useKitStyles();
-  const set = <K extends keyof Filters>(key: K, value: Filters[K]) => onChange({ ...filters, [key]: value });
+  const set = <K extends keyof Filters>(key: K, value: Filters[K]) => {
+    onChange({ ...filters, [key]: value });
+  };
   /** Choix unique : un second tap sur la valeur active la désélectionne. */
-  const pick = (key: 'players' | 'youngestAge', value: number) => set(key, filters[key] === value ? null : value);
-  const toggleDuration = (key: DurationKey) =>
-    set('durations', filters.durations.includes(key) ? filters.durations.filter((d) => d !== key) : [...filters.durations, key]);
+  const pick = (key: 'players' | 'youngestAge', value: number) => {
+    set(key, filters[key] === value ? null : value);
+  };
+  const toggleDuration = (key: DurationKey) => {
+    set(
+      'durations',
+      filters.durations.includes(key) ? filters.durations.filter((d) => d !== key) : [...filters.durations, key],
+    );
+  };
 
   const { players, youngestAge, durations } = filters;
   const hasCriteria = describeActiveFilters(filters).length > 0;
@@ -58,14 +68,25 @@ export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, r
       visible={visible}
       onClose={onClose}
       title="Filtres"
-      action={hasCriteria ? { label: 'Réinitialiser', onPress: () => onChange(clearCriteria(filters)) } : undefined}
+      action={
+        hasCriteria
+          ? {
+              label: 'Réinitialiser',
+              onPress: () => {
+                onChange(clearCriteria(filters));
+              },
+            }
+          : undefined
+      }
     >
       <Section title="Nombre de joueurs" aside={players === null ? ANY : playersLabel(players)}>
         <ChoiceGrid
           label="Nombre de joueurs"
           options={PLAYER_OPTIONS}
           selected={players === null ? [] : [players]}
-          onToggle={(n) => pick('players', n)}
+          onToggle={(n) => {
+            pick('players', n);
+          }}
           columns={5}
         />
       </Section>
@@ -86,7 +107,9 @@ export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, r
           label="Âge du plus jeune joueur"
           options={AGE_OPTIONS}
           selected={youngestAge === null ? [] : [youngestAge]}
-          onToggle={(age) => pick('youngestAge', age)}
+          onToggle={(age) => {
+            pick('youngestAge', age);
+          }}
           columns={6}
         />
       </Section>
@@ -96,15 +119,17 @@ export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, r
           <TagFilterRows
             options={tagOptions}
             selected={filters.tags}
-            onChange={(group, selected) => set('tags', { ...filters.tags, [group]: selected })}
+            onChange={(group, selected) => {
+              set('tags', { ...filters.tags, [group]: selected });
+            }}
           />
         </Section>
       )}
       {!offersMoreTags && (
         <Pressable onPress={onOpenSettings} accessibilityRole="button">
           <Text style={styles.hint}>
-            Envie de filtrer par mécanisme ou par thème ? Choisis-les dans{' '}
-            <Text style={styles.link}>les réglages</Text>.
+            Envie de filtrer par mécanisme ou par thème ? Choisis-les dans <Text style={styles.link}>les réglages</Text>
+            .
           </Text>
         </Pressable>
       )}
@@ -113,7 +138,9 @@ export function FilterSheet({ visible, onClose, filters, onChange, tagOptions, r
         label="Extensions et accessoires"
         description="Les afficher avec les jeux de base"
         value={filters.includeExpansions}
-        onChange={(v) => set('includeExpansions', v)}
+        onChange={(v) => {
+          set('includeExpansions', v);
+        }}
         colors={kit.switchColors}
         styles={kit.switchStyles}
       />

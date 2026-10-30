@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
 /** Suivi de la vérification des mises à jour : propre au téléphone, hors des sauvegardes. */
-export type UpdateCheck = {
+export interface UpdateCheck {
   /** Dernière vérification (ms epoch), pour n'interroger GitHub qu'une fois toutes les 12 h. */
   lastCheckedAt: number | null;
   /** Version ignorée par l'utilisateur : plus annoncée, contrairement aux suivantes. */
   dismissedVersion: string | null;
-};
+}
 
 export const EMPTY_UPDATE_CHECK: UpdateCheck = { lastCheckedAt: null, dismissedVersion: null };
 

@@ -16,7 +16,7 @@ const entry = (overrides: Record<string, unknown> = {}) => ({
   'Thème(s)': ['Antiquité'],
   'Mécanisme(s)': ['Draft'],
   'Auteur(s)': ['Antoine Bauza'],
-  'Prix d\'achat': '42',
+  "Prix d'achat": '42',
   Commentaire: 'perso',
   'Note personnelle': 0,
   'Note moyenne': 7.9,
@@ -71,7 +71,8 @@ describe('importCollection', () => {
 
   it('rejette tout le fichier à la première anomalie et la localise', () => {
     const result = run([entry(), entry({ ID: 2, Titre: 'Cassé', 'Joueur(s)': 'plein' })]);
-    expect(result).toEqual({ ok: false, error: expect.stringContaining('Jeu n°2 (« Cassé »)') });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toContain('Jeu n°2 (« Cassé »)');
     expect(!result.ok && result.error).toContain('Joueur(s)');
     expect(!result.ok && result.error).toContain("Rien n'a été importé");
   });
@@ -99,13 +100,13 @@ describe('importCollection', () => {
   });
 
   it('ignore un BOM en début de fichier', () => {
-    expect(importCollection(`﻿${JSON.stringify([entry()])}`).ok).toBe(true);
+    expect(importCollection(`\uFEFF${JSON.stringify([entry()])}`).ok).toBe(true);
   });
 
   // Vérification sur un vrai export : MYLUDO_EXPORT=chemin/collection.json npm test
-  const exportPath = process.env.MYLUDO_EXPORT;
+  const exportPath = (process.env as Partial<Record<string, string>>).MYLUDO_EXPORT;
   (exportPath ? it : it.skip)('importe le vrai export MyLudo indiqué', () => {
-    const result = importCollection(readFileSync(exportPath!, 'utf8'));
+    const result = importCollection(readFileSync(exportPath ?? '', 'utf8'));
     if (!result.ok) throw new Error(result.error);
     expect(result.games.length).toBeGreaterThan(0);
     // La collection enregistrée doit passer la revalidation au prochain lancement.

@@ -1,9 +1,9 @@
 import { ScrollView, Text, View } from 'react-native';
 
-import type { FirstImportTask } from '../useFirstImport';
 import { Icon } from '../ui/Icon';
 import { PrimaryButton } from '../ui/PrimaryButton';
 import { radius, spacing, themedStyles, useColors } from '../ui/theme';
+import type { FirstImportTask } from '../useFirstImport';
 
 const STEPS = [
   'Sur myludo.fr : Mon compte → Exporter, au format JSON.',
@@ -11,14 +11,14 @@ const STEPS = [
   'Importe-le ici : tout reste sur ton téléphone.',
 ];
 
-type Props = {
+interface Props {
   /** Accepte un export MyLudo ou une sauvegarde Onsortkoi : le format est reconnu à la lecture. */
   onImport: () => void;
   /** Connecte un compte Google et récupère la sauvegarde automatique. */
   onRestoreDrive: () => void;
   /** Action en cours, le cas échéant : son bouton l'indique, les deux sont désactivés. */
   busy: FirstImportTask | null;
-};
+}
 
 export function EmptyState({ onImport, onRestoreDrive, busy }: Props) {
   const c = useColors();

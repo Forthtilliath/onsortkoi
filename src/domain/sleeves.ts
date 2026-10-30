@@ -12,10 +12,20 @@ export const MIN_SIDE = 10;
 export const MAX_SIDE = 300;
 
 /** Jeu protégé par un produit, avec une note libre (ex. « violet : némésis »). */
-export type SleeveLink = { gameId: number; note: string };
+export interface SleeveLink {
+  gameId: number;
+  note: string;
+}
 
 /** Produit de sleeves : format en mm (largeur ≤ hauteur), stock restant et jeux qui l'utilisent. */
-export type Sleeve = { id: number; name: string; width: number; height: number; stock: number; games: SleeveLink[] };
+export interface Sleeve {
+  id: number;
+  name: string;
+  width: number;
+  height: number;
+  stock: number;
+  games: SleeveLink[];
+}
 
 // Les sleeves sont saisies à la main : stockage et sauvegardes relus avec les mêmes bornes que la saisie.
 
@@ -77,7 +87,13 @@ export const formatLabel = ({ width, height }: Pick<Sleeve, 'width' | 'height'>)
 export const plural = (count: number, singular: string, pluralForm = `${singular}s`) =>
   `${count} ${count > 1 ? pluralForm : singular}`;
 
-export type FormatGroup = { key: string; width: number; height: number; stock: number; sleeves: Sleeve[] };
+export interface FormatGroup {
+  key: string;
+  width: number;
+  height: number;
+  stock: number;
+  sleeves: Sleeve[];
+}
 
 const byName = (a: Sleeve, b: Sleeve) => compareText(a.name, b.name);
 
@@ -96,7 +112,10 @@ export function groupByFormat(sleeves: Sleeve[]): FormatGroup[] {
     .sort((a, b) => a.width - b.width || a.height - b.height);
 }
 
-export type GameSleeve = { sleeve: Sleeve; note: string };
+export interface GameSleeve {
+  sleeve: Sleeve;
+  note: string;
+}
 
 /** Produits utilisés par un jeu, triés par format puis par nom. */
 export function sleevesForGame(sleeves: Sleeve[], gameId: number): GameSleeve[] {

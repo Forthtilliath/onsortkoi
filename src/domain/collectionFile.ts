@@ -1,4 +1,4 @@
-import { readBackup, type Backup } from './backup';
+import { type Backup, readBackup } from './backup';
 import { importCollection } from './importSchema';
 import type { Game } from './types';
 
@@ -16,7 +16,7 @@ const UNKNOWN = "Ce fichier n'est ni un export MyLudo ni une sauvegarde Onsortko
 export function readCollectionFile(text: string): CollectionFileResult {
   let data: unknown;
   try {
-    data = JSON.parse(text.replace(/^﻿/, ''));
+    data = JSON.parse(text.replace(/^\uFEFF/, ''));
   } catch {
     return { ok: false, error: UNKNOWN };
   }

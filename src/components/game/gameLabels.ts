@@ -15,7 +15,13 @@ export const subtitleParts = (game: Game) => [TYPE_LABELS[game.type], game.subti
 /** « Extension · sous-titre », ou chaîne vide pour un jeu de base sans sous-titre. */
 export const gameSubtitle = (game: Game) => subtitleParts(game).join(' · ');
 
-export type GameFact = { key: string; icon: IconName; value: string; label: string; spoken: string };
+export interface GameFact {
+  key: string;
+  icon: IconName;
+  value: string;
+  label: string;
+  spoken: string;
+}
 
 /** Intervalle lu à voix haute : « 2 à 4 joueurs », « 2 joueurs ou plus », « 1 joueur ». */
 function spokenRange({ min, max }: Range, singular: string, plural: string): string {
@@ -63,4 +69,4 @@ export function gameAccessibilityLabel(game: Game): string {
 }
 
 /** Première lettre ou chiffre du titre, pour la pastille. */
-export const monogram = (title: string) => title.match(/[\p{L}\p{N}]/u)?.[0]?.toUpperCase() ?? '?';
+export const monogram = (title: string) => /[\p{L}\p{N}]/u.exec(title)?.[0]?.toUpperCase() ?? '?';

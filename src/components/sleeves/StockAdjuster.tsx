@@ -1,18 +1,19 @@
-import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
+
+import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 
 import { parseCount, plural } from '../../domain/sleeves';
 import { PrimaryButton } from '../../ui/PrimaryButton';
 import { TextField } from '../../ui/TextField';
 import { radius, spacing, themedStyles } from '../../ui/theme';
-import { showToast } from '../../ui/Toast';
+import { showToast } from '../../ui/toastHosts';
 
-type Props = {
+interface Props {
   stock: number;
   /** Ajoute `delta` au stock (négatif pour en retirer). */
   onAdjust: (delta: number) => void;
-};
+}
 
 /** Stock restant, et ajout ou retrait d'une quantité : sleeves achetées ou posées sur des cartes. */
 export function StockAdjuster({ stock, onAdjust }: Props) {
@@ -59,10 +60,23 @@ export function StockAdjuster({ stock, onAdjust }: Props) {
       />
       <View style={styles.buttons}>
         <View style={styles.button}>
-          <PrimaryButton label="Utilisées" icon="remove" onPress={() => apply(-1)} outline />
+          <PrimaryButton
+            label="Utilisées"
+            icon="remove"
+            onPress={() => {
+              apply(-1);
+            }}
+            outline
+          />
         </View>
         <View style={styles.button}>
-          <PrimaryButton label="Achetées" icon="add" onPress={() => apply(1)} />
+          <PrimaryButton
+            label="Achetées"
+            icon="add"
+            onPress={() => {
+              apply(1);
+            }}
+          />
         </View>
       </View>
     </View>

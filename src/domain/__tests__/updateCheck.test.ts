@@ -9,9 +9,7 @@ describe('parseUpdateCheck', () => {
   it('repart de zéro sans donnée, ou si elle est corrompue', () => {
     expect(parseUpdateCheck(null)).toEqual(EMPTY_UPDATE_CHECK);
     expect(parseUpdateCheck('{pas du json')).toEqual(EMPTY_UPDATE_CHECK);
-    expect(parseUpdateCheck(JSON.stringify({ lastCheckedAt: -1, dismissedVersion: null }))).toEqual(
-      EMPTY_UPDATE_CHECK,
-    );
+    expect(parseUpdateCheck(JSON.stringify({ lastCheckedAt: -1, dismissedVersion: null }))).toEqual(EMPTY_UPDATE_CHECK);
   });
 
   it("refuse une version ignorée qui n'en est pas une", () => {

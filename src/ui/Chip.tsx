@@ -3,13 +3,13 @@ import { Pressable, Text } from 'react-native';
 import { Icon } from './Icon';
 import { radius, spacing, themedStyles, useColors } from './theme';
 
-type Props = {
+interface Props {
   label: string;
   selected?: boolean;
   onPress: () => void;
   /** Affiche une croix : la puce sert à retirer un élément. */
   removable?: boolean;
-};
+}
 
 export function Chip({ label, selected = false, onPress, removable = false }: Props) {
   const c = useColors();

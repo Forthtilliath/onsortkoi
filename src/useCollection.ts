@@ -1,14 +1,15 @@
-import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
-import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
-import { backup } from './backupManager';
+import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
+import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
+
 import { isStandalone } from './domain/filters';
 import type { Game } from './domain/types';
+import { showToast } from './ui/toastHosts';
+import { backup } from './backupManager';
 import { pickAndImport } from './importFile';
 import { loadCollection, saveCollection, type StoredCollection } from './storage';
-import { showToast } from './ui/Toast';
 
 export function useCollection() {
   const [collection, setCollection] = useState<StoredCollection | null>(null);
@@ -16,7 +17,8 @@ export function useCollection() {
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
-    loadCollection().then((stored) => {
+    // loadCollection ne rejette jamais (donnée absente ou corrompue → null).
+    void loadCollection().then((stored) => {
       setCollection(stored);
       setLoading(false);
     });

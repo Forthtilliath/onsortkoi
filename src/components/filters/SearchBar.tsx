@@ -4,12 +4,12 @@ import { Icon } from '../../ui/Icon';
 import { IconButton } from '../../ui/IconButton';
 import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
 
-type Props = {
+interface Props {
   query: string;
   onChangeQuery: (query: string) => void;
   activeCount: number;
   onOpenFilters: () => void;
-};
+}
 
 /** Recherche par titre ou auteur et accès au sheet des filtres. */
 export function SearchBar({ query, onChangeQuery, activeCount, onOpenFilters }: Props) {
@@ -32,7 +32,9 @@ export function SearchBar({ query, onChangeQuery, activeCount, onOpenFilters }: 
         />
         {query.length > 0 && (
           <Pressable
-            onPress={() => onChangeQuery('')}
+            onPress={() => {
+              onChangeQuery('');
+            }}
             accessibilityRole="button"
             accessibilityLabel="Effacer la recherche"
             hitSlop={10}

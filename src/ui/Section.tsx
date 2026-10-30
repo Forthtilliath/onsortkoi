@@ -3,12 +3,12 @@ import { Text, View } from 'react-native';
 
 import { spacing, themedStyles } from './theme';
 
-type Props = {
+interface Props {
   title: string;
   /** Résumé du choix en cours, à droite du titre (ex. « 4 joueurs »). */
   aside?: string;
   children: ReactNode;
-};
+}
 
 /** Bloc titré d'un sheet ou d'un écran de réglages. */
 export function Section({ title, aside, children }: Props) {

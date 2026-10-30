@@ -1,7 +1,8 @@
-import { useResolvedScheme } from '@forthtilliath/react-native-kit/components/theme/themePreferenceContext';
-import { StyleSheet, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
+import { type ImageStyle, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 
-export type Palette = {
+import { useResolvedScheme } from '@forthtilliath/react-native-kit/components/theme/themePreferenceContext';
+
+export interface Palette {
   scheme: 'light' | 'dark';
   background: string;
   card: string;
@@ -19,7 +20,7 @@ export type Palette = {
   danger: string;
   /** Pastilles des jeux (fond, initiale). */
   tiles: { bg: string; fg: string }[];
-};
+}
 
 // Contrastes vérifiés : texte ≥ 4,5:1 sur fond et carte, étoile et contours ≥ 3:1.
 export const lightColors: Palette = {

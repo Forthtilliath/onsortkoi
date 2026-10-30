@@ -29,7 +29,7 @@ const rating = z
   .min(0)
   .max(10)
   .nullish()
-  .transform((v) => (v ? v : null));
+  .transform((v) => (v === 0 ? null : (v ?? null)));
 
 /** Champ texte ou nombre interprété par `parse` ; une valeur non reconnue rejette le fichier. */
 function parsedField<T>(parse: (raw: string | number) => T | null | undefined) {
@@ -85,7 +85,7 @@ const fail = (error: string): ImportResult => ({ ok: false, error: `${error}\nRi
 export function importCollection(text: string): ImportResult {
   let data: unknown;
   try {
-    data = JSON.parse(text.replace(/^﻿/, ''));
+    data = JSON.parse(text.replace(/^\uFEFF/, ''));
   } catch {
     return fail("Ce fichier n'est pas un export JSON MyLudo valide.");
   }
@@ -100,7 +100,8 @@ export function importCollection(text: string): ImportResult {
     if (typeof index !== 'number') return fail(issue.message);
     const raw = data[index] as { Titre?: unknown } | null;
     const title = typeof raw?.Titre === 'string' ? ` (« ${raw.Titre.slice(0, 60)} »)` : '';
-    const where = field === undefined ? '' : ` — champ « ${String(field)} »`;
+    // Erreur sur l'entrée entière (ex. pas un objet) : aucun champ à citer.
+    const where = issue.path.length > 1 ? ` — champ « ${String(field)} »` : '';
     return fail(`Jeu n°${index + 1}${title}${where} : ${issue.message}`);
   }
 

@@ -1,10 +1,11 @@
+import Constants from 'expo-constants';
+
 import { downloadAndInstallApk } from '@forthtilliath/expo-release-updates/downloadAndInstallApk';
 import {
   fetchLatestRelease,
   fetchReleaseHistory,
   releaseDownloadUrlPrefix,
 } from '@forthtilliath/expo-release-updates/githubReleases';
-import Constants from 'expo-constants';
 
 /**
  * Mises à jour depuis les releases GitHub (dépôt public : aucun jeton embarqué dans l'APK).

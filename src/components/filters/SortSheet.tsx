@@ -1,17 +1,18 @@
-import { selectFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { Pressable, Text, View } from 'react-native';
+
+import { selectFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 
 import { SORT_OPTIONS, type SortKey } from '../../domain/listing';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
 import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
 
-type Props = {
+interface Props {
   visible: boolean;
   onClose: () => void;
   sort: SortKey;
   onChange: (sort: SortKey) => void;
-};
+}
 
 /** Choix de l'ordre de la liste ; le panneau se ferme dès qu'un tri est choisi. */
 export function SortSheet({ visible, onClose, sort, onChange }: Props) {
