@@ -5,6 +5,7 @@ import { Icon } from '../../ui/Icon';
 import { Section } from '../../ui/Section';
 import { Sheet } from '../../ui/Sheet';
 import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
+import { GameSleeves } from '../sleeves/GameSleeves';
 import { gameFacts, gameSubtitle } from './gameLabels';
 
 type Props = {
@@ -104,6 +105,7 @@ export function GameSheet({ game, visible, onClose, onSelectTag, draw }: Props) 
       <Tags title="Catégories" group="categories" tags={game.categories} onSelect={onSelectTag} />
       <Tags title="Mécanismes" group="mechanisms" tags={game.mechanisms} onSelect={onSelectTag} />
       <Tags title="Thèmes" group="themes" tags={game.themes} onSelect={onSelectTag} />
+      <GameSleeves game={game} />
 
       {credits.length > 0 && <Text style={styles.credits}>{credits.join(' · ')}</Text>}
     </Sheet>

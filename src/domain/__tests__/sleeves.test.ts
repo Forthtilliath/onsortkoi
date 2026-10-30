@@ -138,7 +138,15 @@ describe('sleevesSchema', () => {
     ['un stock négatif', { stock: -1 }],
     ['un stock décimal', { stock: 2.5 }],
     ['une note trop longue', { games: [{ gameId: 1, note: 'x'.repeat(101) }] }],
-    ['un jeu associé en double', { games: [{ gameId: 1, note: '' }, { gameId: 1, note: 'b' }] }],
+    [
+      'un jeu associé en double',
+      {
+        games: [
+          { gameId: 1, note: '' },
+          { gameId: 1, note: 'b' },
+        ],
+      },
+    ],
     ['un identifiant de jeu invalide', { games: [{ gameId: -1, note: '' }] }],
   ])('refuse %s', (_label, overrides) => {
     expect(sleevesSchema.safeParse([{ ...sleeve(), ...overrides }]).success).toBe(false);
