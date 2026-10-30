@@ -1,11 +1,16 @@
 import { downloadAndInstallApk } from '@forthtilliath/expo-release-updates/downloadAndInstallApk';
-import { fetchLatestRelease, fetchReleaseHistory } from '@forthtilliath/expo-release-updates/githubReleases';
+import {
+  fetchLatestRelease,
+  fetchReleaseHistory,
+  releaseDownloadUrlPrefix,
+} from '@forthtilliath/expo-release-updates/githubReleases';
 import Constants from 'expo-constants';
 
 /**
  * Mises à jour depuis les releases GitHub (dépôt public : aucun jeton embarqué dans l'APK).
- * Le téléchargement n'accepte que `https://github.com`, et Android refuse d'installer un APK
- * qui n'est pas signé avec la même clé que l'app installée.
+ * Le téléchargement n'accepte que les releases de ce dépôt, l'APK doit correspondre au SHA-256
+ * calculé par GitHub, et Android refuse d'installer un APK qui n'est pas signé avec la même clé
+ * que l'app installée.
  */
 const REPO = { owner: 'Forthtilliath', repo: 'onsortkoi' } as const;
 
@@ -15,5 +20,11 @@ export const checkForUpdate = () => fetchLatestRelease(REPO);
 
 export const fetchHistory = () => fetchReleaseHistory({ ...REPO, limit: 10 });
 
-export const installApk = (apkUrl: string, onProgress?: (fraction: number) => void) =>
-  downloadAndInstallApk({ apkUrl, fileName: 'Onsortkoi-update.apk', onProgress });
+export const installApk = (apkUrl: string, onProgress?: (fraction: number) => void, apkSha256?: string) =>
+  downloadAndInstallApk({
+    apkUrl,
+    fileName: 'Onsortkoi-update.apk',
+    onProgress,
+    expectedSha256: apkSha256,
+    allowedUrlPrefix: releaseDownloadUrlPrefix(REPO),
+  });
