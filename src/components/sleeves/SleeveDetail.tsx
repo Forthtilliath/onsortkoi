@@ -3,6 +3,7 @@ import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helper
 import { useMemo, useState } from 'react';
 import { Text } from 'react-native';
 
+import { compareText } from '../../domain/filters';
 import {
   adjustStock,
   type FormatGroup,
@@ -53,7 +54,7 @@ export function SleeveDetail({ sleeve, games, formats, onClose }: Props) {
     () =>
       sleeve.games
         .map((link) => ({ ...link, title: gamesById.get(link.gameId)?.title ?? missingTitle }))
-        .sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' })),
+        .sort((a, b) => compareText(a.title, b.title)),
     [sleeve.games, gamesById],
   );
   const linkedIds = useMemo(() => new Set(sleeve.games.map((l) => l.gameId)), [sleeve.games]);
