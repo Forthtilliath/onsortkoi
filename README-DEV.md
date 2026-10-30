@@ -40,7 +40,8 @@ Ajouter une dépendance : toujours `npx expo install <paquet>` (versions compati
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Jest |
 | `npm run check` | typecheck + tests (à lancer avant chaque commit) |
-| `npm run lint` | `expo lint` (ESLint, config `eslint-config-expo`) |
+| `npm run lint` | `expo lint` (ESLint, config `@forthtilliath/eslint-config/react-native` en mode strict) |
+| `npm run format` | formate tout le projet avec Prettier (`format:check` pour vérifier sans modifier) |
 | `npx expo-doctor` | diagnostic des dépendances et de la config |
 
 Tester l'import sur un vrai export MyLudo (jamais commité) :

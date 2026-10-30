@@ -30,14 +30,21 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "^5.28.8",
+    "@forthtilliath/eslint-config": "^0.9.0",
     "@forthtilliath/expo-config-plugins": "^0.1.0",
     "@types/jest": "30.0.0",
     "@types/node": "^26.6.6",
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~58.0.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-native": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.5.7",
     "jest": "~30.5.2",
     "jest-expo": "~58.0.13",
+    "prettier": "^3.9.10",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -46,7 +53,9 @@
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit && jest",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "private": true,
   "jest": {
