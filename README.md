@@ -61,6 +61,19 @@ Un tap sur un jeu ouvre sa fiche : joueurs, durée, âge, ta note et la moyenne 
 
 Un tap sur un tag de la fiche affiche tous les jeux de ta collection qui le portent.
 
+La section **Sleeves** de la fiche liste les sleeves utilisées par ce jeu (avec leur note et leur stock), et **+ Ajouter des sleeves** en associe d'autres. Voir ci-dessous.
+
+## Sleeves
+
+L'icône des calques, en haut à droite, ouvre **Mes sleeves** : le stock de protections de cartes qu'il te reste, pour savoir s'il faut en racheter avant de protéger un nouveau jeu.
+
+- **Une entrée par produit** : nom libre (marque, gamme, couleur : « Mayday Premium fond jaune »), format en millimètres (largeur × hauteur, au dixième près : 63,5 × 88) et stock restant. Plusieurs produits peuvent avoir le même format.
+- **Par format** : la liste regroupe les produits par format, du plus petit au plus grand, avec le stock total quand plusieurs marques partagent un format.
+- **Stock** : dans la fiche d'un produit, saisis une quantité puis **Utilisées** (sleeves posées sur des cartes) ou **Achetées** (nouveau paquet). Seul le stock restant est suivi.
+- **Jeux associés** : un même produit peut servir à plusieurs jeux, et un jeu peut utiliser plusieurs produits (ex. Aeon's End : fonds jaune, bleu, violet, transparent…). Chaque association porte une note facultative (« violet : némésis ») pour savoir quelles sleeves reprendre avec une extension. L'association se fait depuis la fiche du produit (**+ Associer un jeu**) ou depuis la fiche du jeu.
+
+Les sleeves sont enregistrées à part de la collection : **réimporter un export MyLudo ne les efface pas**. Un jeu qui a disparu de la collection reste associé et s'affiche comme « Jeu absent de la collection », à retirer à la main si besoin.
+
 ## Réglages
 
 L'icône en haut à droite ouvre les réglages.
@@ -74,7 +87,7 @@ L'icône en haut à droite ouvre les réglages.
 
 ### Sauvegarde automatique (Google Drive)
 
-Dans les réglages, **Connecter Google Drive** relie un compte Google. Ensuite, ta collection et tes réglages y sont envoyés automatiquement après chaque modification (import, réglage changé). Sans réseau, l'envoi attend le prochain lancement.
+Dans les réglages, **Connecter Google Drive** relie un compte Google. Ensuite, ta collection, tes réglages et tes sleeves y sont envoyés automatiquement après chaque modification (import, réglage changé, stock ou association de sleeves). Sans réseau, l'envoi attend le prochain lancement.
 
 La copie est rangée dans un dossier privé de l'app : elle n'apparaît pas dans ton Drive, et l'app n'a accès à aucun autre de tes fichiers.
 
@@ -86,15 +99,16 @@ Sur un nouveau téléphone, **Restaurer depuis Google Drive** (écran d'accueil)
 
 ## Confidentialité et sécurité
 
-- **Réseau seulement pour la sauvegarde** : rien n'est envoyé tant que tu ne connectes pas Google Drive. Une fois connecté, seule ta collection et tes réglages partent vers ton propre Drive (accès limité au dossier privé de l'app).
+- **Réseau seulement pour la sauvegarde** : rien n'est envoyé tant que tu ne connectes pas Google Drive. Une fois connecté, seuls ta collection, tes réglages et tes sleeves partent vers ton propre Drive (accès limité au dossier privé de l'app).
 - **Aucune permission sensible** demandée ; l'accès au stockage, au micro et à la superposition d'écran est explicitement bloqué.
 - **Pas de sauvegarde Android automatique** : seules les sauvegardes que tu actives (Drive, fichier) copient tes données hors du téléphone.
 - **Données minimales** : seuls les champs utiles sont gardés de l'export MyLudo. Prix d'achat, propriétaire, commentaires et autres données personnelles sont ignorés à l'import.
 - **Fichiers vérifiés** : chaque jeu d'un export ou d'une sauvegarde est contrôlé (types, bornes, longueurs ; 10 Mo et 5 000 jeux maximum). À la première anomalie, le fichier entier est refusé avec un message qui indique le jeu et le champ en cause, et **rien n'est modifié**.
-- Une sauvegarde créée par une autre version de l'app est refusée plutôt que mal interprétée.
+- Les sleeves d'une sauvegarde sont contrôlées de la même façon (nom, format, stock, notes, jeux associés).
+- Une sauvegarde créée par une version plus récente de l'app est refusée plutôt que mal interprétée. Les sauvegardes d'avant les sleeves (Onsortkoi 1.2 et antérieures) restent restaurables, sans sleeves.
 
 ## Limites connues
 
 - Android uniquement.
-- Collection en lecture seule : pour ajouter ou modifier un jeu, passe par MyLudo puis réimporte.
+- Collection en lecture seule : pour ajouter ou modifier un jeu, passe par MyLudo puis réimporte. Seules les sleeves se saisissent dans l'app.
 - Seul le format d'export JSON de MyLudo est pris en charge.
