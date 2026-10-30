@@ -6,7 +6,7 @@ Présentation fonctionnelle de l'app : [README.md](README.md).
 
 | Élément | Version / choix |
 | --- | --- |
-| Expo SDK | 57 (`expo ~57.0.28`), React Native 0.86, React 19.2 |
+| Expo SDK | 58 (`expo ~58.0.21`), React Native 0.88, React 19.3 |
 | Langage | TypeScript 6, mode strict |
 | Validation | [zod 4](https://zod.dev), messages en français (`z.locales.fr()`) |
 | Stockage | `@react-native-async-storage/async-storage` |
@@ -14,7 +14,7 @@ Présentation fonctionnelle de l'app : [README.md](README.md).
 | Composants partagés | `@forthtilliath/react-native-kit` (`BottomSheet`, `SwitchRow`, `ThemeToggle`, `ThemePreferenceProvider`, retours haptiques, `confirmDestructive`) |
 | Thème | clair / sombre / système (`userInterfaceStyle: automatic`, `expo-system-ui`), écran de démarrage `expo-splash-screen` |
 | Sauvegarde | `@forthtilliath/expo-backup` (Drive `appDataFolder`, fichier, annulation) + `@forthtilliath/expo-backup-ui` (`BackupScreen`) |
-| Tests | Jest 29 + `jest-expo` |
+| Tests | Jest 30 + `jest-expo` |
 | Cible | **Android uniquement**, identifiant `com.forthtilliath.onsortkoi` |
 
 Pas d'Expo Router : l'app tient sur un seul écran ([App.tsx](App.tsx)) et ouvre des panneaux (filtres, fiche de jeu, réglages) gérés par un état `panel`.
@@ -116,7 +116,7 @@ Toute donnée venant de l'extérieur ou relue depuis le stockage est validée pa
 | --- | --- | --- |
 | Export MyLudo | `importSchema.ts` (par entrée) | fichier entier rejeté, message localisé (n° de jeu, titre, champ) |
 | Sauvegarde | en-tête `app` + `version`, puis `backupSchema` (dont `sleevesSchema`) | fichier entier rejeté, message localisé (jeu ou sleeves, champ) ; version inconnue refusée |
-| AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `sleevesSchema`, `updateCheckSchema`, enum du thème | donnée ignorée (collection absente, aucune sleeve, réglages et thème par défaut) |
+| AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `sleevesSchema`, `updateCheckSchema`, enums du thème et des versions de test | donnée ignorée (collection absente, aucune sleeve, réglages et thème par défaut, versions de test désactivées) |
 
 - Taille du fichier vérifiée avant lecture (`size` du sélecteur, sinon celle du descripteur ouvert) ; la longueur lue est revérifiée pour un fournisseur qui ne donne aucune taille.
 - Bornes : 10 Mo par fichier, 5 000 jeux, 100 tags par jeu, 100 caractères par tag, 200 par titre, joueurs ≤ 100, durée ≤ 24 h, âge ≤ 99, notes 0–10, identifiants uniques.
@@ -180,10 +180,17 @@ Scope `drive.appdata` uniquement (classé « non sensible » par Google) : l'app
 L'app se met à jour depuis les releases GitHub du dépôt (public : aucun jeton dans l'APK), via [`@forthtilliath/expo-release-updates`](https://www.npmjs.com/package/@forthtilliath/expo-release-updates) ([updates.ts](src/updates.ts)) :
 
 - **Au lancement** ([UpdateBanner.tsx](src/components/UpdateBanner.tsx), `UpdateNotifier`) : au plus une vérification toutes les 12 h ; bannière « Installer / Ignorer ». Une version ignorée n'est plus annoncée, la suivante si. Date de vérification et version ignorée : clé `onsortkoi:update-check:v1`, validée par zod ([updateCheck.ts](src/domain/updateCheck.ts)), hors des sauvegardes.
-- **Réglages ▸ Mises à jour** (`UpdateSettingsScreen` du kit) : version installée, vérification manuelle, historique des 10 dernières releases.
+- **Réglages ▸ Mises à jour** ([UpdateSection.tsx](src/components/UpdateSection.tsx), `UpdateSettingsScreen` du kit) : version installée, vérification manuelle, historique des 10 dernières releases, interrupteur « Recevoir les versions de test ».
 - La version comparée est `version` d'[app.json](app.json) ; la release la plus récente doit porter un tag `vX.Y.Z` et un asset `.apk` (son nom est libre : `Onsortkoi-X.Y.Z.apk`). Ses notes sont affichées (sous-ensemble Markdown : `### titre`, `- élément`, `**gras**`).
+- **Versions de test** : une release GitHub marquée *pre-release* (`vX.Y.Z-alpha.N`, `-beta.N`) n'est proposée, et listée dans l'historique, qu'avec l'interrupteur activé (désactivé par défaut). Choix propre au téléphone : clé `onsortkoi:prereleases:v1` (`on` / `off`, validée par zod), hors des sauvegardes. La version finale `X.Y.Z` est ensuite proposée à tous, y compris à qui a installé ses versions de test.
 
-Sécurité : le téléchargement n'accepte qu'une URL `https://github.com`, et Android refuse d'installer un APK qui n'est pas signé avec la même clé que l'app installée. La protection repose donc sur la clé d'upload (hors du dépôt) et sur qui peut publier une release. Permission requise : `REQUEST_INSTALL_PACKAGES` (l'utilisateur doit en plus autoriser l'app comme source d'installation, à la première mise à jour).
+Sécurité : seule une release de ce dépôt est proposée et téléchargée (`requireVerifiedApk`, `allowedUrlPrefix`), l'APK doit correspondre au SHA-256 calculé par GitHub, et Android refuse d'installer un APK qui n'est pas signé avec la même clé que l'app installée. La protection repose donc sur la clé d'upload (hors du dépôt) et sur qui peut publier une release. Permission requise : `REQUEST_INSTALL_PACKAGES` (l'utilisateur doit en plus autoriser l'app comme source d'installation, à la première mise à jour).
+
+### Publier une version de test
+
+1. `version` à `X.Y.Z-alpha.N` dans [package.json](package.json) et [app.json](app.json) ; `android.versionCode` incrémenté à chaque APK publié (Android refuse d'installer un `versionCode` inférieur à celui installé).
+2. Build release et vérification de la signature (voir « Build et publication »).
+3. `gh release create vX.Y.Z-alpha.N Onsortkoi-X.Y.Z-alpha.N.apk --prerelease --target <branche>` : sans `--prerelease`, la version serait proposée à tout le monde.
 
 ## Conventions
 
