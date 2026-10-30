@@ -6,10 +6,11 @@ import { spacing, themedStyles } from '../ui/theme';
 type Props = {
   /** Nombre de jeux de base ; `null` sans collection importée. */
   gameCount: number | null;
+  onOpenSleeves: () => void;
   onOpenSettings: () => void;
 };
 
-export function AppHeader({ gameCount, onOpenSettings }: Props) {
+export function AppHeader({ gameCount, onOpenSleeves, onOpenSettings }: Props) {
   const styles = useStyles();
   return (
     <View style={styles.header}>
@@ -23,7 +24,12 @@ export function AppHeader({ gameCount, onOpenSettings }: Props) {
           </Text>
         )}
       </View>
-      {gameCount !== null && <IconButton icon="settings-outline" label="Réglages" onPress={onOpenSettings} />}
+      {gameCount !== null && (
+        <>
+          <IconButton icon="layers-outline" label="Mes sleeves" onPress={onOpenSleeves} />
+          <IconButton icon="settings-outline" label="Réglages" onPress={onOpenSettings} />
+        </>
+      )}
     </View>
   );
 }
@@ -32,7 +38,7 @@ const useStyles = themedStyles((c) => ({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,

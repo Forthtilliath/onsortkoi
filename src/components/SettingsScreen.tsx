@@ -121,7 +121,7 @@ export function SettingsScreen({ visible, settings, onChange, collection, onReim
           <Section title="Sauvegarde">
             <BackupScreen
               manager={backup}
-              describeBackup={(data) => `${data.collection.games.length} jeux`}
+              describeBackup={(data) => `${data.collection.games.length} jeux, ${data.sleeves.length} sleeves`}
               styles={kit.backup}
             />
           </Section>
