@@ -33,6 +33,8 @@ export const backup = createBackupManager<Backup>({
   },
   // Premier lancement ou nouveau téléphone : restaurer sans copie de sécurité (rien à annuler).
   hasLocalData: async () => (await loadCollection()) !== null,
+  // Une collection vide n'écrase jamais toute seule une sauvegarde Drive qui ne l'est pas.
+  isEmpty: (data) => data.collection.games.length === 0 && data.sleeves.length === 0,
   serialize: (data) => createBackup(data),
   parse(text) {
     const result = readBackup(text);
