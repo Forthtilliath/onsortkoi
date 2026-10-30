@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { compareText } from './filters';
 import { MAX_GAMES } from './importSchema';
 
 export const MAX_SLEEVES = 500;
@@ -78,7 +79,7 @@ export const plural = (count: number, singular: string, pluralForm = `${singular
 
 export type FormatGroup = { key: string; width: number; height: number; stock: number; sleeves: Sleeve[] };
 
-const byName = (a: Sleeve, b: Sleeve) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+const byName = (a: Sleeve, b: Sleeve) => compareText(a.name, b.name);
 
 /** Produits regroupés par format (du plus petit au plus grand), avec le stock total de chaque format. */
 export function groupByFormat(sleeves: Sleeve[]): FormatGroup[] {

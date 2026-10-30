@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, TextInput } from 'react-native';
 
-import { normalize } from '../../domain/filters';
+import { byTitle, normalize } from '../../domain/filters';
 import type { Game } from '../../domain/types';
 import { Icon } from '../../ui/Icon';
 import { ScreenModal } from '../../ui/ScreenModal';
@@ -27,7 +27,7 @@ export function GamePicker({ visible, games, exclude, onPick, onClose }: Props) 
     const q = normalize(query);
     return games
       .filter((g) => !exclude.has(g.id) && (!q || normalize(`${g.title} ${g.subtitle}`).includes(q)))
-      .sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
+      .sort(byTitle);
   }, [games, exclude, query]);
 
   return (
