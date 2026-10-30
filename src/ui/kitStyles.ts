@@ -1,5 +1,6 @@
 import type { BackupScreenStyles } from '@forthtilliath/expo-backup-ui';
 import type { UpdateNotifierProps } from '@forthtilliath/expo-release-updates-ui/UpdateNotifier';
+import type { AddButtonStyles } from '@forthtilliath/react-native-kit/components/list/AddButton';
 import type { BottomSheetStyles } from '@forthtilliath/react-native-kit/components/overlay/BottomSheet';
 import type { SwitchRowColors, SwitchRowStyles } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 import type { UpdateSettingsScreenStyles } from '@forthtilliath/react-native-kit/components/settings/UpdateSettingsScreen';
@@ -12,6 +13,13 @@ import { byPalette, type Palette, radius, spacing } from './theme';
 
 function sheet(c: Palette): BottomSheetStyles {
   return { sheet: { backgroundColor: c.background, paddingTop: 0, paddingBottom: 0, maxHeight: '90%' } };
+}
+
+function addButton(c: Palette): AddButtonStyles {
+  return {
+    button: { minHeight: 48, justifyContent: 'center', borderColor: c.control, borderRadius: radius.md },
+    text: { color: c.primary, fontSize: 15, fontWeight: '600' },
+  };
 }
 
 function switchColors(c: Palette): SwitchRowColors {
@@ -120,6 +128,7 @@ export const useKitStyles = byPalette((c) => {
   const { notifier, screen } = updates(c);
   return {
     sheet: sheet(c),
+    addButton: addButton(c),
     switchColors: switchColors(c),
     switchStyles: switchStyles(c),
     backup: backup(c),
