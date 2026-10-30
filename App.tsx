@@ -18,6 +18,7 @@ import { GameSheet } from './src/components/game/GameSheet';
 import { NoResults } from './src/components/NoResults';
 import { RANDOM_BUTTON_SPACE, RandomButton } from './src/components/RandomButton';
 import { SettingsScreen } from './src/components/SettingsScreen';
+import { SleevesScreen } from './src/components/sleeves/SleevesScreen';
 import { UpdateBanner } from './src/components/UpdateBanner';
 import { backup, setBackupAppliedListener } from './src/backupManager';
 import { clearCriteria } from './src/domain/activeFilters';
@@ -33,14 +34,16 @@ import { useCollection } from './src/useCollection';
 import { useFirstImport } from './src/useFirstImport';
 import { useGameFilters } from './src/useGameFilters';
 import { useSettings } from './src/useSettings';
+import { SleevesProvider, useSleeves } from './src/useSleeves';
 
-type Panel = 'filters' | 'sort' | 'game' | 'settings' | null;
+type Panel = 'filters' | 'sort' | 'game' | 'settings' | 'sleeves' | null;
 
 function Main() {
   const c = useColors();
   const styles = useStyles();
   const { collection, loading, importing, runImport, importGames, replaceCollection } = useCollection();
   const { settings, updateSettings } = useSettings();
+  const { replace: replaceSleeves } = useSleeves();
   const games = collection?.games;
   const [panel, setPanel] = useState<Panel>(null);
   const { filters, setFilters, sort, setSort, results, criteria, tagOptions, pruneFor } = useGameFilters(
@@ -89,9 +92,10 @@ function Main() {
 
   useAutoBackup(backup);
   // Après une restauration (fichier, Drive ou annulation) : la mémoire suit le stockage.
-  const onBackupApplied = useEffectEvent(({ collection: restored, settings: restoredSettings }: Backup) => {
+  const onBackupApplied = useEffectEvent(({ collection: restored, settings: restoredSettings, sleeves }: Backup) => {
     replaceCollection(restored);
     changeSettings(restoredSettings);
+    replaceSleeves(sleeves);
   });
   useEffect(() => {
     setBackupAppliedListener((data) => onBackupApplied(data));
@@ -102,7 +106,11 @@ function Main() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <StatusBar style={c.scheme === 'dark' ? 'light' : 'dark'} />
-      <AppHeader gameCount={baseGameCount} onOpenSettings={() => setPanel('settings')} />
+      <AppHeader
+        gameCount={baseGameCount}
+        onOpenSleeves={() => setPanel('sleeves')}
+        onOpenSettings={() => setPanel('settings')}
+      />
       <UpdateBanner />
 
       {loading ? (
@@ -178,6 +186,7 @@ function Main() {
             importing={importing}
             onClose={close}
           />
+          <SleevesScreen visible={panel === 'sleeves'} games={collection.games} onClose={close} />
         </>
       )}
       <ToastHost offset={collection ? RANDOM_BUTTON_SPACE : 0} />
@@ -189,7 +198,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemePreferenceProvider load={loadThemePreference} save={saveThemePreference}>
-        <Main />
+        <SleevesProvider>
+          <Main />
+        </SleevesProvider>
       </ThemePreferenceProvider>
     </SafeAreaProvider>
   );
