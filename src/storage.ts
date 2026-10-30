@@ -16,6 +16,7 @@ const KEY = 'onsortkoi:collection:v1';
 const SETTINGS_KEY = 'onsortkoi:settings:v1';
 const UPDATE_CHECK_KEY = 'onsortkoi:update-check:v1';
 const THEME_KEY = 'onsortkoi:theme:v1';
+const PRERELEASES_KEY = 'onsortkoi:prereleases:v1';
 // À part de la collection : un réimport MyLudo remplace les jeux mais jamais les sleeves.
 const SLEEVES_KEY = 'onsortkoi:sleeves:v1';
 
@@ -95,6 +96,22 @@ export async function saveThemePreference(preference: ThemePreference): Promise<
   await AsyncStorage.setItem(THEME_KEY, preference).catch(() => {
     /* échec d'écriture sans gravité : le thème choisi reste appliqué pour la session */
   });
+}
+
+// Versions de test (alpha, bêta) : choix propre au téléphone, hors des sauvegardes, désactivé par défaut.
+const prereleasesSchema = z.enum(['on', 'off']);
+
+export async function loadIncludePrereleases(): Promise<boolean> {
+  try {
+    const result = prereleasesSchema.safeParse(await AsyncStorage.getItem(PRERELEASES_KEY));
+    return result.success && result.data === 'on';
+  } catch {
+    return false;
+  }
+}
+
+export async function saveIncludePrereleases(include: boolean): Promise<void> {
+  await AsyncStorage.setItem(PRERELEASES_KEY, include ? 'on' : 'off');
 }
 
 /** Enregistre une sauvegarde validée : collection, réglages et sleeves en une seule écriture. */

@@ -3,9 +3,7 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackupScreen } from '@forthtilliath/expo-backup-ui';
-import { compareVersions } from '@forthtilliath/expo-release-updates/compareVersions';
 import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
-import { UpdateSettingsScreen } from '@forthtilliath/react-native-kit/components/settings/UpdateSettingsScreen';
 import { useThemePreference } from '@forthtilliath/react-native-kit/components/theme/themePreferenceContext';
 import { ThemeToggle } from '@forthtilliath/react-native-kit/components/theme/ThemeToggle';
 
@@ -20,9 +18,9 @@ import { PrimaryButton } from '../ui/PrimaryButton';
 import { Section } from '../ui/Section';
 import { radius, spacing, themedStyles, useColors } from '../ui/theme';
 import { ToastHost } from '../ui/Toast';
-import { checkForUpdate, currentVersion, fetchHistory, installApk } from '../updates';
 
 import { TagChecklist } from './TagChecklist';
+import { UpdateSection } from './UpdateSection';
 
 type ChoiceGroup = 'mechanisms' | 'themes';
 
@@ -133,14 +131,7 @@ export function SettingsScreen({ visible, settings, onChange, collection, onReim
           </Section>
 
           <Section title="Mises à jour">
-            <UpdateSettingsScreen
-              currentVersion={currentVersion}
-              checkForUpdate={checkForUpdate}
-              compareVersions={compareVersions}
-              downloadAndInstallApk={installApk}
-              fetchReleaseHistory={fetchHistory}
-              styles={kit.updateScreen}
-            />
+            <UpdateSection />
           </Section>
         </ScrollView>
 

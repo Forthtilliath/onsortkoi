@@ -103,6 +103,8 @@ function updates(c: Palette) {
     changelogVersion: { color: c.text },
     changelogDate: { color: c.muted },
     notes,
+    prereleaseSwitch: { ...switchStyles(c), row: [switchStyles(c).row, { marginTop: spacing.sm }] },
+    prereleaseSwitchColors: switchColors(c),
   };
 
   return { notifier, screen };
