@@ -66,20 +66,23 @@ src/
 │   ├── durations.ts     tranches de durée et test de chevauchement
 │   ├── activeFilters.ts critères actifs → puces { label, clear }
 │   ├── settings.ts      réglages, tags proposés, nettoyage des filtres
+│   ├── sleeves.ts       Sleeve, schéma zod, regroupement par format, stock, associations jeu ↔ sleeves
 │   ├── updateCheck.ts   suivi des vérifications de mise à jour (zod)
 │   └── __tests__/
 ├── storage.ts           AsyncStorage + revalidation zod au chargement
 ├── importFile.ts        sélecteur de fichier, limite de taille, lecture
 ├── useCollection.ts     chargement, import, remplacement de la collection
 ├── useSettings.ts       chargement et enregistrement des réglages
+├── useSleeves.tsx      SleevesProvider : sleeves en mémoire, enregistrement de chaque modification
 ├── useGameFilters.ts    filtres en cours, résultats, tags proposés
 ├── backupManager.ts     gestionnaire expo-backup : collect / parse (readBackup) / apply
 ├── useFirstImport.ts    accueil : import d'un fichier (MyLudo ou sauvegarde), restauration Drive
 ├── updates.ts           releases GitHub : version installée, vérification, téléchargement de l'APK
 ├── components/          écrans et panneaux propres à l'app
 │   ├── filters/         SearchBar, FilterSheet, TagFilterRows, ActiveFilterBar
-│   └── game/            GameCard, GameTile, GameSheet, libellés
-└── ui/                  briques génériques : thème (palettes, themedStyles), Sheet, Chip, ChoiceGrid, Toast, boutons…
+│   ├── game/            GameCard, GameTile, GameSheet, libellés
+│   └── sleeves/         SleevesScreen, SleeveDetail, SleeveForm, StockAdjuster, pickers, LinkEditor, GameSleeves
+└── ui/                  briques génériques : thème (palettes, themedStyles), Sheet, ScreenModal, CardRow, TextField, Chip, Toast, boutons…
 ```
 
 Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures, testables sans mock), les accès natifs dans les modules à la racine de `src/`, l'état React dans les hooks `use*`. Pas de fichier de plus de 300 lignes.
@@ -90,7 +93,8 @@ Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures
 2. **Filtrage** : `useGameFilters` combine collection, filtres, tri et réglages. Par collection, il calcule une fois l'index de recherche (titre, sous-titre, auteurs normalisés) et la liste triée (`sortGames`, un seul `Intl.Collator`) ; `filterGames` filtre ensuite en gardant l'ordre. La recherche passe par `useDeferredValue` pour que la saisie reste fluide. `facetTags` compte, pour chaque tag, les jeux retenus par les *autres* critères : c'est le nombre affiché à côté du tag ; ces compteurs ne sont recalculés que panneau des filtres ouvert.
 3. **Réglages** : un changement passe par `pruneFor`, qui retire des filtres actifs les tags qui ne sont plus proposés. Un tag choisi depuis la fiche d'un jeu reste actif même s'il n'est pas proposé dans les filtres.
 4. **Sauvegarde** : `backup` ([backupManager.ts](src/backupManager.ts)), créé avec `createBackupManager`. `serialize` = `createBackup`, `parse` = `readBackup` (zod, le message d'erreur est affiché tel quel), `apply` = `saveBackup` (un seul `multiSet`) puis mise à jour de l'état via `setBackupAppliedListener`. `useCollection` et `useSettings` appellent `backup.notifyDataChanged()` après chaque écriture : envoi sur Drive 3 s plus tard, ou au passage en arrière-plan. `collect` lève une erreur tant qu'aucune collection n'existe : rien n'est envoyé.
-5. **Restauration Drive depuis l'accueil** ([useFirstImport.ts](src/useFirstImport.ts)) : `connectCloud` ; en cas de sauvegarde existante (`conflict`), `resolveConflict(…, 'cloud')` la restaure. Sur un téléphone vide, `hasLocalData` (dans [backupManager.ts](src/backupManager.ts)) évite la copie de sécurité des données locales, que `collect` ne peut pas fournir.
+5. **Sleeves** : saisies à la main, donc stockées à part (`onsortkoi:sleeves:v1`) et rattachées aux jeux par leur identifiant MyLudo ; un réimport (qui remplace la collection) n'y touche pas, et une association vers un jeu disparu est gardée. `SleevesProvider` ([useSleeves.tsx](src/useSleeves.tsx)) applique chaque modification par `change(transform)` (fonctions pures de [sleeves.ts](src/domain/sleeves.ts)), l'enregistre puis appelle `notifyDataChanged()` ; aucune écriture avant la fin du chargement, pour ne pas écraser la liste stockée. Les formulaires sont des écrans pleins (`ScreenModal`) plutôt que des `Sheet` : les champs restent en haut, hors de portée du clavier.
+6. **Restauration Drive depuis l'accueil** ([useFirstImport.ts](src/useFirstImport.ts)) : `connectCloud` ; en cas de sauvegarde existante (`conflict`), `resolveConflict(…, 'cloud')` la restaure. Sur un téléphone vide, `hasLocalData` (dans [backupManager.ts](src/backupManager.ts)) évite la copie de sécurité des données locales, que `collect` ne peut pas fournir.
 
 ### Règles de filtrage
 
@@ -110,12 +114,13 @@ Toute donnée venant de l'extérieur ou relue depuis le stockage est validée pa
 | Entrée | Schéma | En cas d'anomalie |
 | --- | --- | --- |
 | Export MyLudo | `importSchema.ts` (par entrée) | fichier entier rejeté, message localisé (n° de jeu, titre, champ) |
-| Sauvegarde | en-tête `app` + `version`, puis `backupSchema` | fichier entier rejeté ; version différente refusée |
-| AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `updateCheckSchema`, enum du thème | donnée ignorée (collection absente, réglages et thème par défaut) |
+| Sauvegarde | en-tête `app` + `version`, puis `backupSchema` (dont `sleevesSchema`) | fichier entier rejeté, message localisé (jeu ou sleeves, champ) ; version inconnue refusée |
+| AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `sleevesSchema`, `updateCheckSchema`, enum du thème | donnée ignorée (collection absente, aucune sleeve, réglages et thème par défaut) |
 
 - Taille du fichier vérifiée avant lecture (`size` du sélecteur, sinon celle du descripteur ouvert) ; la longueur lue est revérifiée pour un fournisseur qui ne donne aucune taille.
 - Bornes : 10 Mo par fichier, 5 000 jeux, 100 tags par jeu, 100 caractères par tag, 200 par titre, joueurs ≤ 100, durée ≤ 24 h, âge ≤ 99, notes 0–10, identifiants uniques.
 - zod supprime les clés inconnues : les données personnelles de l'export (prix, propriétaire, commentaire…) ne sont jamais enregistrées.
+- Sleeves : 500 produits, nom 1–60 caractères, format 10–300 mm au dixième près (largeur ≤ hauteur), stock entier 0–99 999, note ≤ 100 caractères, identifiants et jeux associés uniques.
 - `gameSchema` reprend les mêmes bornes que l'import : une collection restaurée ne peut pas contenir ce qu'un import aurait refusé.
 - `android.allowBackup: false` : les données ne partent pas dans la sauvegarde automatique d'Android, seulement dans les sauvegardes choisies (Drive, fichier).
 - Permissions Android ajoutées : `REQUEST_INSTALL_PACKAGES` (mises à jour intégrées) et `VIBRATE` (retours haptiques, `expo-haptics`) ; `READ/WRITE_EXTERNAL_STORAGE`, `SYSTEM_ALERT_WINDOW`, `RECORD_AUDIO`, `USE_BIOMETRIC` et `USE_FINGERPRINT` sont dans `blockedPermissions`.
@@ -124,7 +129,7 @@ Tout nouvel import (nouveau format, nouveau champ) suit le même modèle : sché
 
 ### Faire évoluer le format de sauvegarde
 
-Le format est versionné (`VERSION` dans [backup.ts](src/domain/backup.ts)). Si `Game` ou `Settings` changent de forme, incrémenter `VERSION` et prévoir la lecture de l'ancienne version (migration) plutôt que de refuser les sauvegardes existantes des utilisateurs. Les clés AsyncStorage (`onsortkoi:*:v1`) suivent la même logique.
+Le format est versionné (`VERSION` dans [backup.ts](src/domain/backup.ts)) : version 2 depuis l'ajout des sleeves ; une sauvegarde v1 est relue avec une liste de sleeves vide. Si `Game` ou `Settings` changent de forme, incrémenter `VERSION` et prévoir la lecture de l'ancienne version (migration) plutôt que de refuser les sauvegardes existantes des utilisateurs. Les clés AsyncStorage (`onsortkoi:*:v1`) suivent la même logique.
 
 ## Build et publication
 
