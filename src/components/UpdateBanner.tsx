@@ -7,7 +7,7 @@ import { EMPTY_UPDATE_CHECK, type UpdateCheck } from '../domain/updateCheck';
 import { loadUpdateCheck, saveUpdateCheck } from '../storage';
 import { useKitStyles } from '../ui/kitStyles';
 import { spacing } from '../ui/theme';
-import { checkForUpdate, currentVersion, installApk } from '../updates';
+import { checkForUpdateOnLaunch, currentVersion, installApk } from '../updates';
 
 /**
  * Au lancement (au plus une fois toutes les 12 h) : annonce une nouvelle version publiée
@@ -38,7 +38,7 @@ export function UpdateBanner() {
       <UpdateNotifier
         enabled={loaded}
         currentVersion={currentVersion}
-        checkForUpdate={checkForUpdate}
+        checkForUpdate={checkForUpdateOnLaunch}
         getLastCheck={() => storedRef.current}
         onChecked={(lastCheckedAt) => {
           record({ lastCheckedAt });
