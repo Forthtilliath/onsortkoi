@@ -14,7 +14,7 @@ describe('filterableTags', () => {
     expect(filterableTags(settings, 'themes', ['Animaux'])).toEqual([]);
   });
 
-  it("ne propose aucun mécanisme ni thème par défaut", () => {
+  it('ne propose aucun mécanisme ni thème par défaut', () => {
     expect(filterableTags(DEFAULT_SETTINGS, 'mechanisms', ['Draft'])).toEqual([]);
   });
 });

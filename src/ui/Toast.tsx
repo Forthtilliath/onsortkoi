@@ -1,28 +1,16 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Pressable, Text } from 'react-native';
+import { Animated, Pressable, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { radius, spacing, themedStyles } from './theme';
+import { registerToastHost, type ToastHostCallback } from './toastHosts';
 
 const DURATION_MS = 3500;
 
-type Host = (message: string) => void;
-
-// Pile des hôtes montés : le dernier (ex. celui de l'écran de réglages, ouvert par-dessus la liste)
-// est le seul visible, c'est donc lui qui affiche le message.
-const hosts: Host[] = [];
-
-/** Message bref qui disparaît seul, pour une action réussie (les erreurs restent des dialogues). */
-export function showToast(message: string): void {
-  hosts.at(-1)?.(message);
-  // Annonce explicite : TalkBack ne lit pas toujours une vue qui vient d'apparaître.
-  AccessibilityInfo.announceForAccessibility(message);
-}
-
-type Props = {
+interface Props {
   /** Marge au-dessus du bas de l'écran (safe area comprise), pour laisser un bouton flottant visible. */
   offset?: number;
-};
+}
 
 /** Emplacement des toasts d'un écran ; à placer en dernier, par-dessus le contenu. */
 export function ToastHost({ offset = 0 }: Props) {
@@ -33,20 +21,21 @@ export function ToastHost({ offset = 0 }: Props) {
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const hide = () =>
+    const hide = () => {
       Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(({ finished }) => {
         if (finished) setMessage(null);
       });
-    const host: Host = (next) => {
+    };
+    const host: ToastHostCallback = (next) => {
       clearTimeout(timer);
       setMessage(next);
       Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
       timer = setTimeout(hide, DURATION_MS);
     };
-    hosts.push(host);
+    const unregister = registerToastHost(host);
     return () => {
       clearTimeout(timer);
-      hosts.splice(hosts.indexOf(host), 1);
+      unregister();
     };
   }, [opacity]);
 
@@ -57,7 +46,13 @@ export function ToastHost({ offset = 0 }: Props) {
     <Animated.View
       style={[styles.toast, { bottom: bottom + spacing.lg + offset, opacity, transform: [{ translateY }] }]}
     >
-      <Pressable onPress={() => setMessage(null)} accessibilityRole="button" accessibilityHint="Masque le message">
+      <Pressable
+        onPress={() => {
+          setMessage(null);
+        }}
+        accessibilityRole="button"
+        accessibilityHint="Masque le message"
+      >
         <Text style={styles.text}>{message}</Text>
       </Pressable>
     </Animated.View>

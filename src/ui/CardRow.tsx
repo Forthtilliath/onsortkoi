@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Icon } from './Icon';
 import { radius, spacing, themedStyles, useColors } from './theme';
 
-type RowProps = {
+interface RowProps {
   title: string;
   /** Lignes discrètes sous le titre (format, note…). */
   details?: string[];
@@ -12,7 +12,7 @@ type RowProps = {
   value?: string;
   onPress: () => void;
   accessibilityLabel?: string;
-};
+}
 
 /** Ligne cliquable d'une carte : titre, détails, valeur et chevron. */
 export function CardRow({ title, details = [], value, onPress, accessibilityLabel }: RowProps) {

@@ -1,11 +1,16 @@
-import { selectFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { Pressable, Text, View } from 'react-native';
+
+import { selectFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 
 import { radius, spacing, themedStyles } from './theme';
 
-export type ChoiceOption<T> = { value: T; label: string; hint?: string };
+export interface ChoiceOption<T> {
+  value: T;
+  label: string;
+  hint?: string;
+}
 
-type Props<T extends string | number> = {
+interface Props<T extends string | number> {
   options: ChoiceOption<T>[];
   selected: readonly T[];
   /** Un tap sur une case cochée la décoche. */
@@ -15,7 +20,7 @@ type Props<T extends string | number> = {
   label: string;
   /** Plusieurs cases cochables (cases à cocher) plutôt qu'une seule (boutons radio). */
   multiple?: boolean;
-};
+}
 
 /** Grille de cases de même taille : choix en un tap, sans défilement horizontal. */
 export function ChoiceGrid<T extends string | number>({
@@ -32,8 +37,8 @@ export function ChoiceGrid<T extends string | number>({
 
   return (
     <View style={styles.grid} accessibilityRole={multiple ? undefined : 'radiogroup'} accessibilityLabel={label}>
-      {rows.map((row, index) => (
-        <View key={index} style={styles.row}>
+      {rows.map((row) => (
+        <View key={String(row[0].value)} style={styles.row}>
           {row.map((option) => {
             const checked = selected.includes(option.value);
             return (

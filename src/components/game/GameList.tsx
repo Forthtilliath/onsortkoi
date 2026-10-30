@@ -2,12 +2,13 @@ import { type ReactElement, type Ref, useMemo } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { listRows, type ListRow } from '../../domain/listing';
+import { type ListRow, listRows } from '../../domain/listing';
 import type { Game } from '../../domain/types';
 import { spacing, themedStyles } from '../../ui/theme';
+
 import { GameCard } from './GameCard';
 
-type Props = {
+interface Props {
   games: Game[];
   /** En-têtes par lettre, collés en haut pendant le défilement (tri par titre). */
   withLetters: boolean;
@@ -17,7 +18,7 @@ type Props = {
   /** Place laissée sous la liste pour le bouton flottant. */
   bottomSpace: number;
   listRef: Ref<FlatList<ListRow>>;
-};
+}
 
 const keyOf = (row: ListRow) => (row.kind === 'letter' ? `letter-${row.letter}` : String(row.game.id));
 

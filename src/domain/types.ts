@@ -1,7 +1,10 @@
 /** Intervalle inclusif ; `max: null` = sans limite haute (ex. « 2+ »). */
-export type Range = { min: number; max: number | null };
+export interface Range {
+  min: number;
+  max: number | null;
+}
 
-export type Game = {
+export interface Game {
   id: number;
   title: string;
   subtitle: string;
@@ -21,9 +24,12 @@ export type Game = {
   rating: number | null;
   /** Note moyenne de la communauté MyLudo sur 10. */
   averageRating: number | null;
-};
+}
 
 /** Collection enregistrée sur le téléphone. */
-export type StoredCollection = { importedAt: string; games: Game[] };
+export interface StoredCollection {
+  importedAt: string;
+  games: Game[];
+}
 
-export type TagGroup ='categories' | 'themes' | 'mechanisms';
+export type TagGroup = 'categories' | 'themes' | 'mechanisms';

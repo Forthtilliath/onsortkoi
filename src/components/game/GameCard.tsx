@@ -4,10 +4,14 @@ import { Pressable, Text, View } from 'react-native';
 import type { Game } from '../../domain/types';
 import { Icon } from '../../ui/Icon';
 import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
+
 import { gameAccessibilityLabel, gameFacts, subtitleParts } from './gameLabels';
 import { GameTile } from './GameTile';
 
-type Props = { game: Game; onPress: (game: Game) => void };
+interface Props {
+  game: Game;
+  onPress: (game: Game) => void;
+}
 
 function GameCardBase({ game, onPress }: Props) {
   const c = useColors();
@@ -17,7 +21,9 @@ function GameCardBase({ game, onPress }: Props) {
 
   return (
     <Pressable
-      onPress={() => onPress(game)}
+      onPress={() => {
+        onPress(game);
+      }}
       accessibilityRole="button"
       accessibilityLabel={gameAccessibilityLabel(game)}
       accessibilityHint="Ouvre la fiche du jeu"

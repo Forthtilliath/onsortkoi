@@ -1,7 +1,7 @@
 import { type DurationKey, matchesDurations } from './durations';
 import type { Game, Range, TagGroup } from './types';
 
-export type Filters = {
+export interface Filters {
   query: string;
   players: number | null;
   /** Tranches de durée acceptées (OU) ; vide = toutes. */
@@ -10,7 +10,7 @@ export type Filters = {
   youngestAge: number | null;
   includeExpansions: boolean;
   tags: Record<TagGroup, string[]>;
-};
+}
 
 export const EMPTY_FILTERS: Filters = {
   query: '',
@@ -48,11 +48,7 @@ export function filtersForTag(current: Filters, group: TagGroup, tag: string): F
 export const isStandalone = (game: Game) => STANDALONE_TYPES.has(game.type);
 
 export function normalize(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
+  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
 // Un seul comparateur réutilisé : `localeCompare` avec une langue en recrée un à chaque appel (lent sur Hermes).
@@ -109,7 +105,10 @@ export const filterGames = (games: Game[], filters: Filters, index?: SearchIndex
 /** Jeux retenus, triés par titre. */
 export const applyFilters = (games: Game[], filters: Filters): Game[] => filterGames(games, filters).sort(byTitle);
 
-export type TagCount = { name: string; count: number };
+export interface TagCount {
+  name: string;
+  count: number;
+}
 
 /** Liste les tags d'un groupe présents dans la collection, avec leur nombre de jeux. */
 export function collectTags(games: Game[], group: TagGroup): TagCount[] {
@@ -117,9 +116,7 @@ export function collectTags(games: Game[], group: TagGroup): TagCount[] {
   for (const game of games) {
     for (const tag of game[group]) counts.set(tag, (counts.get(tag) ?? 0) + 1);
   }
-  return [...counts]
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => compareText(a.name, b.name));
+  return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => compareText(a.name, b.name));
 }
 
 /**

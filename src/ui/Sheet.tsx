@@ -1,13 +1,14 @@
-import { BottomSheet } from '@forthtilliath/react-native-kit/components/overlay/BottomSheet';
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { BottomSheet } from '@forthtilliath/react-native-kit/components/overlay/BottomSheet';
 
 import { Icon } from './Icon';
 import { useKitStyles } from './kitStyles';
 import { radius, spacing, themedStyles, useColors } from './theme';
 
-type Props = {
+interface Props {
   visible: boolean;
   onClose: () => void;
   title: string;
@@ -16,7 +17,7 @@ type Props = {
   /** Action texte à droite du titre (ex. « Réinitialiser »). */
   action?: { label: string; onPress: () => void };
   children: ReactNode;
-};
+}
 
 /** BottomSheet de la lib, avec poignée, titre, action et bouton de fermeture. */
 export function Sheet({ visible, onClose, title, subtitle, action, children }: Props) {

@@ -28,8 +28,18 @@ const sleeves: Sleeve[] = [
 ];
 const saved: Backup = { collection, settings, sleeves };
 
+type Raw = Record<string, unknown>;
+
+/** Sauvegarde brute : chaque valeur peut être remplacée, même par une valeur invalide. */
+interface RawBackup {
+  [key: string]: unknown;
+  collection: { importedAt: unknown; games: Raw[] };
+  settings: Raw;
+  sleeves: (Raw & { games: Raw[] })[];
+}
+
 /** Sauvegarde valide, modifiable avant d'être relue. */
-const backupData = () => JSON.parse(createBackup(saved)) as Record<string, any>;
+const backupData = () => JSON.parse(createBackup(saved)) as RawBackup;
 const read = (data: unknown) => readBackup(JSON.stringify(data));
 
 describe('readBackup', () => {
@@ -41,7 +51,7 @@ describe('readBackup', () => {
   it('relit une sauvegarde de version 1, sans sleeves', () => {
     const data = backupData();
     data.version = 1;
-    delete data.sleeves;
+    Reflect.deleteProperty(data, 'sleeves');
     expect(read(data)).toEqual({ ok: true, backup: { collection, settings, sleeves: [] } });
   });
 
@@ -72,16 +82,19 @@ describe('readBackup', () => {
     ['une autre app', JSON.stringify({ app: 'autre', version: 1 })],
   ])('refuse %s', (_label, text) => {
     const result = readBackup(text);
-    expect(result).toEqual({ ok: false, error: expect.stringContaining("pas une sauvegarde Onsortkoi") });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toContain('pas une sauvegarde Onsortkoi');
   });
 
   it('refuse une autre version du format', () => {
     const data = backupData();
     data.version = 3;
-    expect(read(data)).toEqual({ ok: false, error: expect.stringContaining('autre version') });
+    const result = read(data);
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toContain('autre version');
   });
 
-  it.each<[string, (data: Record<string, any>) => void]>([
+  it.each<[string, (data: RawBackup) => void]>([
     ['un titre vide', (d) => (d.collection.games[0].title = '')],
     ['un titre trop long', (d) => (d.collection.games[0].title = 'x'.repeat(201))],
     ['une note hors bornes', (d) => (d.collection.games[0].rating = 11)],
@@ -93,8 +106,8 @@ describe('readBackup', () => {
     ['un identifiant en double', (d) => d.collection.games.push(d.collection.games[0])],
     ['une date invalide', (d) => (d.collection.importedAt = 'hier')],
     ['des réglages invalides', (d) => (d.settings.showCategories = 'oui')],
-    ['des réglages absents', (d) => delete d.settings],
-    ['des sleeves absentes en version 2', (d) => delete d.sleeves],
+    ['des réglages absents', (d) => Reflect.deleteProperty(d, 'settings')],
+    ['des sleeves absentes en version 2', (d) => Reflect.deleteProperty(d, 'sleeves')],
     ['un stock de sleeves négatif', (d) => (d.sleeves[0].stock = -5)],
     ['un format de sleeves invalide', (d) => (d.sleeves[0].width = 'grand')],
     ['une note de sleeves trop longue', (d) => (d.sleeves[0].games[0].note = 'x'.repeat(101))],

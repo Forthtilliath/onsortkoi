@@ -1,14 +1,14 @@
 import type { Filters } from './filters';
 import type { TagGroup } from './types';
 
-export type Settings = {
+export interface Settings {
   /** Affiche le filtre par catégorie (toutes les catégories de la collection). */
   showCategories: boolean;
   /** Thèmes proposés comme filtres. */
   themes: string[];
   /** Mécanismes proposés comme filtres. */
   mechanisms: string[];
-};
+}
 
 export const DEFAULT_SETTINGS: Settings = { showCategories: true, themes: [], mechanisms: [] };
 

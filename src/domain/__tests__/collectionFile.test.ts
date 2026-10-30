@@ -40,7 +40,9 @@ describe('readCollectionFile', () => {
 
   it('garde la validation complète de chaque format', () => {
     expect(readCollectionFile(JSON.stringify([{ ...myludoEntry, ID: -1 }])).ok).toBe(false);
-    const backup = JSON.parse(createBackup({ collection, settings, sleeves: [] }));
+    const backup = JSON.parse(createBackup({ collection, settings, sleeves: [] })) as {
+      collection: { games: Record<string, unknown>[] };
+    };
     backup.collection.games[0].title = '';
     expect(readCollectionFile(JSON.stringify(backup)).ok).toBe(false);
   });
@@ -54,6 +56,6 @@ describe('readCollectionFile', () => {
   });
 
   it('accepte un BOM en tête de fichier', () => {
-    expect(readCollectionFile(`﻿${JSON.stringify([myludoEntry])}`).ok).toBe(true);
+    expect(readCollectionFile(`\uFEFF${JSON.stringify([myludoEntry])}`).ok).toBe(true);
   });
 });

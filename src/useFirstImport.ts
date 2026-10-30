@@ -1,13 +1,14 @@
-import { defaultLabels, errorMessage } from '@forthtilliath/expo-backup-ui';
-import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 
-import { applyBackupData, backup } from './backupManager';
+import { defaultLabels, errorMessage } from '@forthtilliath/expo-backup-ui';
+import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
+
 import type { Backup } from './domain/backup';
 import type { Game } from './domain/types';
+import { showToast } from './ui/toastHosts';
+import { applyBackupData, backup } from './backupManager';
 import { pickCollectionFile } from './importFile';
-import { showToast } from './ui/Toast';
 
 /** Action de l'accueil en cours : import d'un fichier ou restauration Drive. */
 export type FirstImportTask = 'file' | 'drive';

@@ -8,14 +8,14 @@ import { ScreenModal } from '../../ui/ScreenModal';
 import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
 import { gameSubtitle } from '../game/gameLabels';
 
-type Props = {
+interface Props {
   visible: boolean;
   games: Game[];
   /** Jeux déjà associés, masqués de la liste. */
   exclude: Set<number>;
   onPick: (game: Game) => void;
   onClose: () => void;
-};
+}
 
 /** Choix d'un jeu de la collection (extensions comprises), avec recherche par titre. */
 export function GamePicker({ visible, games, exclude, onPick, onClose }: Props) {
@@ -51,7 +51,9 @@ export function GamePicker({ visible, games, exclude, onPick, onClose }: Props) 
           const subtitle = gameSubtitle(item);
           return (
             <Pressable
-              onPress={() => onPick(item)}
+              onPress={() => {
+                onPick(item);
+              }}
               accessibilityRole="button"
               accessibilityLabel={[item.title, subtitle].filter(Boolean).join(', ')}
               style={({ pressed }) => [styles.item, pressed && styles.pressed]}

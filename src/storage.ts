@@ -1,6 +1,7 @@
-import type { ThemePreference } from '@forthtilliath/react-native-kit/hooks/useEffectiveColorScheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { z } from 'zod';
+
+import type { ThemePreference } from '@forthtilliath/react-native-kit/hooks/useEffectiveColorScheme';
 
 import type { Backup } from './domain/backup';
 import { settingsSchema, storedCollectionSchema } from './domain/gameSchema';
@@ -91,8 +92,9 @@ export async function loadThemePreference(): Promise<ThemePreference | null> {
 }
 
 export async function saveThemePreference(preference: ThemePreference): Promise<void> {
-  // Échec d'écriture sans gravité : le thème choisi reste appliqué pour la session.
-  await AsyncStorage.setItem(THEME_KEY, preference).catch(() => {});
+  await AsyncStorage.setItem(THEME_KEY, preference).catch(() => {
+    /* échec d'écriture sans gravité : le thème choisi reste appliqué pour la session */
+  });
 }
 
 /** Enregistre une sauvegarde validée : collection, réglages et sleeves en une seule écriture. */

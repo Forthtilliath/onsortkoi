@@ -3,14 +3,14 @@ import { Pressable, Text } from 'react-native';
 import { Icon, type IconName } from './Icon';
 import { radius, spacing, themedStyles, useColors } from './theme';
 
-type Props = {
+interface Props {
   label: string;
   onPress: () => void;
   icon?: IconName;
   disabled?: boolean;
   /** Bouton contour plutôt que plein, pour une action secondaire. */
   outline?: boolean;
-};
+}
 
 export function PrimaryButton({ label, onPress, icon, disabled = false, outline = false }: Props) {
   const c = useColors();

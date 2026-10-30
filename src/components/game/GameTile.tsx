@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { Game } from '../../domain/types';
 import { radius, useColors } from '../../ui/theme';
+
 import { monogram } from './gameLabels';
 
 /** Pastille colorée avec l'initiale du jeu (l'export MyLudo n'a pas d'image). */

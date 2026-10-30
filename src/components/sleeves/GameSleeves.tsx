@@ -1,5 +1,6 @@
-import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
 import { useMemo, useState } from 'react';
+
+import { AddButton } from '@forthtilliath/react-native-kit/components/list/AddButton';
 
 import {
   formatLabel,
@@ -15,6 +16,7 @@ import { Card, CardRow } from '../../ui/CardRow';
 import { useKitStyles } from '../../ui/kitStyles';
 import { Section } from '../../ui/Section';
 import { useSleeves } from '../../useSleeves';
+
 import { LinkEditor } from './LinkEditor';
 import { SleeveForm } from './SleeveForm';
 import { SleevePicker } from './SleevePicker';
@@ -30,7 +32,9 @@ export function GameSleeves({ game }: { game: Game }) {
   const used = useMemo(() => sleevesForGame(sleeves, game.id), [sleeves, game.id]);
   const groups = useMemo(() => groupByFormat(sleeves), [sleeves]);
   const linked = step?.kind === 'link' ? sleeves.find((s) => s.id === step.sleeveId) : undefined;
-  const close = () => setStep(null);
+  const close = () => {
+    setStep(null);
+  };
 
   return (
     <Section title="Sleeves" aside={used.length ? String(used.length) : undefined}>
@@ -45,20 +49,32 @@ export function GameSleeves({ game }: { game: Game }) {
               accessibilityLabel={[sleeve.name, formatLabel(sleeve), note, plural(sleeve.stock, 'restante')]
                 .filter(Boolean)
                 .join(', ')}
-              onPress={() => setStep({ kind: 'link', sleeveId: sleeve.id, note })}
+              onPress={() => {
+                setStep({ kind: 'link', sleeveId: sleeve.id, note });
+              }}
             />
           ))}
         </Card>
       )}
-      <AddButton label="+ Ajouter des sleeves" onPress={() => setStep({ kind: 'pick' })} styles={kit.addButton} />
+      <AddButton
+        label="+ Ajouter des sleeves"
+        onPress={() => {
+          setStep({ kind: 'pick' });
+        }}
+        styles={kit.addButton}
+      />
 
       {step?.kind === 'pick' && (
         <SleevePicker
           gameTitle={game.title}
           gameId={game.id}
           groups={groups}
-          onPick={(sleeve) => setStep({ kind: 'link', sleeveId: sleeve.id })}
-          onCreate={() => setStep({ kind: 'create' })}
+          onPick={(sleeve) => {
+            setStep({ kind: 'link', sleeveId: sleeve.id });
+          }}
+          onCreate={() => {
+            setStep({ kind: 'create' });
+          }}
           onClose={close}
         />
       )}

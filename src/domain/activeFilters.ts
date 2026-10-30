@@ -2,12 +2,12 @@ import { DURATION_BUCKETS } from './durations';
 import { EMPTY_FILTERS, type Filters, playersLabel } from './filters';
 import type { TagGroup } from './types';
 
-export type ActiveFilter = {
+export interface ActiveFilter {
   key: string;
   label: string;
   /** Retire ce critère (toute sa famille : toutes les durées, tous les mécanismes…). */
   clear: (filters: Filters) => Filters;
-};
+}
 
 const TAG_GROUPS: TagGroup[] = ['categories', 'mechanisms', 'themes'];
 
@@ -49,8 +49,9 @@ export function describeActiveFilters(filters: Filters): ActiveFilter[] {
     });
   }
   for (const group of TAG_GROUPS) {
-    const [first, ...others] = filters.tags[group];
-    if (first === undefined) continue;
+    const tags = filters.tags[group];
+    if (tags.length === 0) continue;
+    const [first, ...others] = tags;
     active.push({
       key: group,
       label: others.length ? `${first} +${others.length}` : first,

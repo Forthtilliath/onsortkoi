@@ -2,8 +2,8 @@ import { useDeferredValue, useMemo, useState } from 'react';
 
 import type { TagOption } from './components/filters/TagFilterRows';
 import { describeActiveFilters } from './domain/activeFilters';
-import { buildSearchIndex, collectTags, EMPTY_FILTERS, facetTags, type Filters, filterGames } from './domain/filters';
-import { type SortKey, sortGames } from './domain/listing';
+import { buildSearchIndex, collectTags, EMPTY_FILTERS, facetTags, filterGames, type Filters } from './domain/filters';
+import { sortGames, type SortKey } from './domain/listing';
 import { filterableTags, pruneFilterTags, type Settings } from './domain/settings';
 import type { Game, TagGroup } from './domain/types';
 
@@ -47,7 +47,14 @@ export function useGameFilters(games: Game[] | undefined, settings: Settings, fa
     return FILTER_GROUPS.flatMap(({ group, label }) => {
       const all = collectTags(games, group);
       const chosen = facetFilters.tags[group];
-      const offered = new Set([...filterableTags(settings, group, all.map((t) => t.name)), ...chosen]);
+      const offered = new Set([
+        ...filterableTags(
+          settings,
+          group,
+          all.map((t) => t.name),
+        ),
+        ...chosen,
+      ]);
       if (offered.size === 0) return [];
       const counts = new Map(facetTags(games, facetFilters, group, index ?? undefined).map((t) => [t.name, t.count]));
       const tags = all
@@ -59,7 +66,9 @@ export function useGameFilters(games: Game[] | undefined, settings: Settings, fa
   }, [games, settings, facetFilters, index]);
 
   /** À appeler après un changement de réglages : retire les tags qui ne sont plus proposés. */
-  const pruneFor = (next: Settings) => setFilters((f) => pruneFilterTags(f, next));
+  const pruneFor = (next: Settings) => {
+    setFilters((f) => pruneFilterTags(f, next));
+  };
 
   return { filters, setFilters, sort, setSort, results, criteria, tagOptions, pruneFor };
 }

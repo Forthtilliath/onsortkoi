@@ -1,6 +1,7 @@
-import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
 import { useState } from 'react';
 import { Text } from 'react-native';
+
+import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
 
 import { formatLabel, MAX_NOTE_LENGTH, plural, type Sleeve } from '../../domain/sleeves';
 import { PrimaryButton } from '../../ui/PrimaryButton';
@@ -8,7 +9,7 @@ import { ScreenModal } from '../../ui/ScreenModal';
 import { TextField } from '../../ui/TextField';
 import { themedStyles } from '../../ui/theme';
 
-type Props = {
+interface Props {
   visible: boolean;
   gameTitle: string;
   sleeve: Sleeve;
@@ -17,7 +18,7 @@ type Props = {
   onSave: (note: string) => void;
   onRemove: () => void;
   onClose: () => void;
-};
+}
 
 /** Association d'un jeu à un produit de sleeves, avec une note libre. */
 export function LinkEditor({ visible, gameTitle, sleeve, initialNote, onSave, onRemove, onClose }: Props) {
@@ -25,11 +26,12 @@ export function LinkEditor({ visible, gameTitle, sleeve, initialNote, onSave, on
   const [note, setNote] = useState(initialNote ?? '');
   const isNew = initialNote === undefined;
 
-  const remove = () =>
+  const remove = () => {
     confirmDestructive('Retirer ce jeu ?', onRemove, {
       message: `${gameTitle} ne sera plus associé à « ${sleeve.name} ». Le stock ne change pas.`,
       confirmLabel: 'Retirer',
     });
+  };
 
   return (
     <ScreenModal
@@ -37,7 +39,12 @@ export function LinkEditor({ visible, gameTitle, sleeve, initialNote, onSave, on
       onClose={onClose}
       title={gameTitle}
       subtitle={`${sleeve.name} · ${formatLabel(sleeve)} · ${plural(sleeve.stock, 'restante')}`}
-      action={{ label: isNew ? 'Associer' : 'Enregistrer', onPress: () => onSave(note) }}
+      action={{
+        label: isNew ? 'Associer' : 'Enregistrer',
+        onPress: () => {
+          onSave(note);
+        },
+      }}
     >
       <TextField
         label="Note (facultative)"
@@ -47,7 +54,9 @@ export function LinkEditor({ visible, gameTitle, sleeve, initialNote, onSave, on
         maxLength={MAX_NOTE_LENGTH}
         autoFocus={isNew}
         returnKeyType="done"
-        onSubmitEditing={() => onSave(note)}
+        onSubmitEditing={() => {
+          onSave(note);
+        }}
       />
       <Text style={styles.hint}>
         Pour quelles cartes de ce jeu ? Utile pour reprendre les mêmes sleeves avec une extension.

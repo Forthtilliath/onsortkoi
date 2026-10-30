@@ -1,7 +1,7 @@
 import { File } from 'expo-file-system';
 
-import { readCollectionFile, type CollectionFileResult } from './domain/collectionFile';
-import { importCollection, MAX_FILE_BYTES, type ImportResult } from './domain/importSchema';
+import { type CollectionFileResult, readCollectionFile } from './domain/collectionFile';
+import { importCollection, type ImportResult, MAX_FILE_BYTES } from './domain/importSchema';
 
 type PickedText = { ok: true; text: string } | { ok: false; error: string };
 

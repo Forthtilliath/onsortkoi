@@ -3,12 +3,12 @@ import { Text, View } from 'react-native';
 import { IconButton } from '../ui/IconButton';
 import { spacing, themedStyles } from '../ui/theme';
 
-type Props = {
+interface Props {
   /** Nombre de jeux de base ; `null` sans collection importée. */
   gameCount: number | null;
   onOpenSleeves: () => void;
   onOpenSettings: () => void;
-};
+}
 
 export function AppHeader({ gameCount, onOpenSleeves, onOpenSettings }: Props) {
   const styles = useStyles();

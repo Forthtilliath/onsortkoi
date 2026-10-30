@@ -1,12 +1,13 @@
+import { useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackupScreen } from '@forthtilliath/expo-backup-ui';
 import { compareVersions } from '@forthtilliath/expo-release-updates/compareVersions';
 import { SwitchRow } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 import { UpdateSettingsScreen } from '@forthtilliath/react-native-kit/components/settings/UpdateSettingsScreen';
 import { useThemePreference } from '@forthtilliath/react-native-kit/components/theme/themePreferenceContext';
 import { ThemeToggle } from '@forthtilliath/react-native-kit/components/theme/ThemeToggle';
-import { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { backup } from '../backupManager';
 import { collectTags } from '../domain/filters';
@@ -20,6 +21,7 @@ import { Section } from '../ui/Section';
 import { radius, spacing, themedStyles, useColors } from '../ui/theme';
 import { ToastHost } from '../ui/Toast';
 import { checkForUpdate, currentVersion, fetchHistory, installApk } from '../updates';
+
 import { TagChecklist } from './TagChecklist';
 
 type ChoiceGroup = 'mechanisms' | 'themes';
@@ -29,7 +31,7 @@ const CHOICES: { key: ChoiceGroup; label: string; title: string }[] = [
   { key: 'themes', label: 'Thèmes proposés', title: 'Thèmes' },
 ];
 
-type Props = {
+interface Props {
   visible: boolean;
   settings: Settings;
   onChange: (settings: Settings) => void;
@@ -37,7 +39,7 @@ type Props = {
   onReimport: () => void;
   importing: boolean;
   onClose: () => void;
-};
+}
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR');
 
@@ -72,7 +74,9 @@ export function SettingsScreen({ visible, settings, onChange, collection, onReim
                 label="Catégories"
                 description="Toutes les catégories de ta collection"
                 value={settings.showCategories}
-                onChange={(showCategories) => onChange({ ...settings, showCategories })}
+                onChange={(showCategories) => {
+                  onChange({ ...settings, showCategories });
+                }}
                 colors={kit.switchColors}
                 styles={{ label: styles.switchLabel, description: styles.hint }}
               />
@@ -82,7 +86,9 @@ export function SettingsScreen({ visible, settings, onChange, collection, onReim
                 return (
                   <Pressable
                     key={key}
-                    onPress={() => setEditing(key)}
+                    onPress={() => {
+                      setEditing(key);
+                    }}
                     accessibilityRole="button"
                     accessibilityLabel={`${label} : ${value}`}
                     style={({ pressed }) => [styles.row, styles.separator, pressed && styles.pressed]}
@@ -144,8 +150,12 @@ export function SettingsScreen({ visible, settings, onChange, collection, onReim
             title={editedChoice.title}
             tags={tagsByGroup[editedChoice.key]}
             selected={settings[editedChoice.key]}
-            onChange={(selected) => onChange({ ...settings, [editedChoice.key]: selected })}
-            onClose={() => setEditing(null)}
+            onChange={(selected) => {
+              onChange({ ...settings, [editedChoice.key]: selected });
+            }}
+            onClose={() => {
+              setEditing(null);
+            }}
           />
         )}
         <ToastHost />

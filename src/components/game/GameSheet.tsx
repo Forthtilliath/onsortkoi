@@ -6,9 +6,10 @@ import { Section } from '../../ui/Section';
 import { Sheet } from '../../ui/Sheet';
 import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
 import { GameSleeves } from '../sleeves/GameSleeves';
+
 import { gameFacts, gameSubtitle } from './gameLabels';
 
-type Props = {
+interface Props {
   /** Gardé pendant l'animation de fermeture pour que le contenu ne disparaisse pas. */
   game: Game | null;
   visible: boolean;
@@ -17,9 +18,14 @@ type Props = {
   onSelectTag: (group: TagGroup, tag: string) => void;
   /** Jeu tiré au sort : nombre de jeux du tirage et nouveau tirage. */
   draw?: { from: number; onReroll: () => void };
-};
+}
 
-type TagsProps = { title: string; group: TagGroup; tags: string[]; onSelect: Props['onSelectTag'] };
+interface TagsProps {
+  title: string;
+  group: TagGroup;
+  tags: string[];
+  onSelect: Props['onSelectTag'];
+}
 
 function Tags({ title, group, tags, onSelect }: TagsProps) {
   const styles = useStyles();
@@ -30,7 +36,9 @@ function Tags({ title, group, tags, onSelect }: TagsProps) {
         {tags.map((tag) => (
           <Pressable
             key={tag}
-            onPress={() => onSelect(group, tag)}
+            onPress={() => {
+              onSelect(group, tag);
+            }}
             accessibilityRole="button"
             accessibilityHint="Affiche tous les jeux de la collection avec ce tag"
             style={({ pressed }) => [styles.tag, pressed && styles.pressed]}

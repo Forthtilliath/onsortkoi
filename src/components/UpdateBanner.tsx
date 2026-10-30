@@ -1,6 +1,7 @@
-import { UpdateNotifier } from '@forthtilliath/expo-release-updates-ui/UpdateNotifier';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { UpdateNotifier } from '@forthtilliath/expo-release-updates-ui/UpdateNotifier';
 
 import { EMPTY_UPDATE_CHECK, type UpdateCheck } from '../domain/updateCheck';
 import { loadUpdateCheck, saveUpdateCheck } from '../storage';
@@ -14,20 +15,22 @@ import { checkForUpdate, currentVersion, installApk } from '../updates';
  */
 export function UpdateBanner() {
   const kit = useKitStyles();
-  const stored = useRef<UpdateCheck>(EMPTY_UPDATE_CHECK);
+  const storedRef = useRef<UpdateCheck>(EMPTY_UPDATE_CHECK);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    loadUpdateCheck().then((check) => {
-      stored.current = check;
+    // loadUpdateCheck ne rejette jamais (état vide en cas de problème).
+    void loadUpdateCheck().then((check) => {
+      storedRef.current = check;
       setLoaded(true);
     });
   }, []);
 
   const record = (patch: Partial<UpdateCheck>) => {
-    stored.current = { ...stored.current, ...patch };
-    // Échec d'écriture sans gravité : au pire, la vérification se refait au prochain lancement.
-    saveUpdateCheck(stored.current).catch(() => {});
+    storedRef.current = { ...storedRef.current, ...patch };
+    saveUpdateCheck(storedRef.current).catch(() => {
+      /* échec d'écriture sans gravité : au pire, la vérification se refait au prochain lancement */
+    });
   };
 
   return (
@@ -36,9 +39,13 @@ export function UpdateBanner() {
         enabled={loaded}
         currentVersion={currentVersion}
         checkForUpdate={checkForUpdate}
-        getLastCheck={() => stored.current}
-        onChecked={(lastCheckedAt) => record({ lastCheckedAt })}
-        onDismissVersion={(dismissedVersion) => record({ dismissedVersion })}
+        getLastCheck={() => storedRef.current}
+        onChecked={(lastCheckedAt) => {
+          record({ lastCheckedAt });
+        }}
+        onDismissVersion={(dismissedVersion) => {
+          record({ dismissedVersion });
+        }}
         downloadAndInstallApk={installApk}
         styles={kit.updateNotifier}
       />

@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Icon, type IconName } from './Icon';
 import { radius, themedStyles, useColors } from './theme';
 
-type Props = {
+interface Props {
   icon: IconName;
   label: string;
   onPress: () => void;
@@ -11,7 +11,7 @@ type Props = {
   badge?: number;
   /** Bouton plein (couleur principale) plutôt que discret. */
   filled?: boolean;
-};
+}
 
 export function IconButton({ icon, label, onPress, badge = 0, filled = false }: Props) {
   const c = useColors();

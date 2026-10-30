@@ -17,7 +17,7 @@ import { Section } from '../../ui/Section';
 import { TextField } from '../../ui/TextField';
 import { radius, spacing, themedStyles } from '../../ui/theme';
 
-type Props = {
+interface Props {
   visible: boolean;
   /** Produit modifié ; absent pour en créer un. */
   initial?: Sleeve;
@@ -25,7 +25,7 @@ type Props = {
   formats: FormatGroup[];
   onSubmit: (draft: SleeveDraft) => void;
   onClose: () => void;
-};
+}
 
 type Errors = Partial<Record<'name' | 'width' | 'height' | 'stock', string>>;
 
@@ -36,8 +36,8 @@ const SIDE_ERROR = `Entre ${MIN_SIDE} et ${MAX_SIDE} mm, au dixième près (ex. 
 export function SleeveForm({ visible, initial, formats, onSubmit, onClose }: Props) {
   const styles = useStyles();
   const [name, setName] = useState(initial?.name ?? '');
-  const [width, setWidth] = useState(mmText(initial?.width));
-  const [height, setHeight] = useState(mmText(initial?.height));
+  const [width, setWidth] = useState(() => mmText(initial?.width));
+  const [height, setHeight] = useState(() => mmText(initial?.height));
   const [stock, setStock] = useState(initial ? String(initial.stock) : '');
   const [errors, setErrors] = useState<Errors>({});
 

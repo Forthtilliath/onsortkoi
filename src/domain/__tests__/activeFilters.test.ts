@@ -4,7 +4,7 @@ import { EMPTY_FILTERS, type Filters } from '../filters';
 const filters = (f: Partial<Filters>): Filters => ({ ...EMPTY_FILTERS, ...f });
 
 describe('describeActiveFilters', () => {
-  it("ne compte ni la recherche texte ni les filtres vides", () => {
+  it('ne compte ni la recherche texte ni les filtres vides', () => {
     expect(describeActiveFilters(filters({ query: 'azul' }))).toEqual([]);
   });
 

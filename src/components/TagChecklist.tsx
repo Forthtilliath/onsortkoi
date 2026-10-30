@@ -1,20 +1,21 @@
-import { selectFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { selectFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 
 import { normalize, type TagCount } from '../domain/filters';
 import { Icon } from '../ui/Icon';
 import { radius, spacing, themedStyles, useColors } from '../ui/theme';
 
-type Props = {
+interface Props {
   visible: boolean;
   title: string;
   tags: TagCount[];
   selected: string[];
   onChange: (selected: string[]) => void;
   onClose: () => void;
-};
+}
 
 /** Liste à cocher plein écran, avec recherche et nombre de jeux par tag. */
 export function TagChecklist({ visible, title, tags, selected, onChange, onClose }: Props) {
@@ -59,7 +60,13 @@ export function TagChecklist({ visible, title, tags, selected, onChange, onClose
             {selected.length} coché{selected.length > 1 ? 's' : ''} sur {tags.length}
           </Text>
           {selected.length > 0 && (
-            <Pressable onPress={() => onChange([])} accessibilityRole="button" hitSlop={8}>
+            <Pressable
+              onPress={() => {
+                onChange([]);
+              }}
+              accessibilityRole="button"
+              hitSlop={8}
+            >
               <Text style={styles.clear}>Tout décocher</Text>
             </Pressable>
           )}
@@ -73,7 +80,9 @@ export function TagChecklist({ visible, title, tags, selected, onChange, onClose
             const checked = selected.includes(item.name);
             return (
               <Pressable
-                onPress={() => toggle(item.name)}
+                onPress={() => {
+                  toggle(item.name);
+                }}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked }}
                 accessibilityLabel={`${item.name}, ${item.count} jeu${item.count > 1 ? 'x' : ''}`}

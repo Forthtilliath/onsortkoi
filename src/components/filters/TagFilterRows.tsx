@@ -7,13 +7,17 @@ import { Icon } from '../../ui/Icon';
 import { radius, spacing, themedStyles, useColors } from '../../ui/theme';
 import { TagChecklist } from '../TagChecklist';
 
-export type TagOption = { group: TagGroup; label: string; tags: TagCount[] };
+export interface TagOption {
+  group: TagGroup;
+  label: string;
+  tags: TagCount[];
+}
 
-type Props = {
+interface Props {
   options: TagOption[];
   selected: Record<TagGroup, string[]>;
   onChange: (group: TagGroup, selected: string[]) => void;
-};
+}
 
 /** Une ligne par groupe de tags, résumant la sélection ; un tap ouvre la liste à cocher. */
 export function TagFilterRows({ options, selected, onChange }: Props) {
@@ -29,7 +33,9 @@ export function TagFilterRows({ options, selected, onChange }: Props) {
         return (
           <Pressable
             key={group}
-            onPress={() => setEditing(group)}
+            onPress={() => {
+              setEditing(group);
+            }}
             accessibilityRole="button"
             accessibilityLabel={`${label} : ${chosen.length ? chosen.join(', ') : 'tous'}`}
             style={({ pressed }) => [styles.row, index > 0 && styles.separator, pressed && styles.pressed]}
@@ -58,8 +64,12 @@ export function TagFilterRows({ options, selected, onChange }: Props) {
           title={edited.label}
           tags={edited.tags}
           selected={selected[edited.group]}
-          onChange={(next) => onChange(edited.group, next)}
-          onClose={() => setEditing(null)}
+          onChange={(next) => {
+            onChange(edited.group, next);
+          }}
+          onClose={() => {
+            setEditing(null);
+          }}
         />
       )}
     </View>
