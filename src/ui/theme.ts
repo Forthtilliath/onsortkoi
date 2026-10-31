@@ -1,5 +1,8 @@
-import { type ImageStyle, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
-
+import {
+  createPaletteMemo,
+  createThemedStyles,
+  type NamedStyles,
+} from '@forthtilliath/react-native-kit/components/theme/createThemedStyles';
 import { useResolvedScheme } from '@forthtilliath/react-native-kit/components/theme/themePreferenceContext';
 
 export interface Palette {
@@ -76,24 +79,12 @@ export function useColors(): Palette {
   return useResolvedScheme() === 'dark' ? darkColors : lightColors;
 }
 
-/** Hook renvoyant `factory(palette)`, calculé une seule fois par palette. */
+/** Hook renvoyant `factory(palette)`, calculé une seule fois par palette (`createPaletteMemo` du kit). */
 export function byPalette<T>(factory: (c: Palette) => T): () => T {
-  const cache = new Map<Palette, T>();
-  return function usePaletteValue() {
-    const c = useColors();
-    let value = cache.get(c);
-    if (value === undefined) {
-      value = factory(c);
-      cache.set(c, value);
-    }
-    return value;
-  };
+  return createPaletteMemo(useColors, factory);
 }
 
-/** Ex-`StyleSheet.NamedStyles`, retiré de l'API TypeScript stricte de React Native. */
-type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
-
-/** `StyleSheet.create` aux couleurs du thème en cours, une feuille par palette. */
+/** `StyleSheet.create` aux couleurs du thème en cours, une feuille par palette (`createThemedStyles` du kit). */
 export function themedStyles<T extends NamedStyles<T>>(factory: (c: Palette) => T): () => T {
-  return byPalette((c) => StyleSheet.create(factory(c)));
+  return createThemedStyles(useColors, factory);
 }
