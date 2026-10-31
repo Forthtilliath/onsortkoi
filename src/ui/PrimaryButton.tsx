@@ -1,7 +1,7 @@
-import { Pressable, Text } from 'react-native';
+import { Button } from '@forthtilliath/react-native-kit/components/form/Button';
 
 import { Icon, type IconName } from './Icon';
-import { radius, spacing, themedStyles, useColors } from './theme';
+import { radius, spacing, useColors } from './theme';
 
 interface Props {
   label: string;
@@ -12,37 +12,23 @@ interface Props {
   outline?: boolean;
 }
 
+/** `Button` de react-native-kit aux couleurs du thème, plein ou contour. */
 export function PrimaryButton({ label, onPress, icon, disabled = false, outline = false }: Props) {
   const c = useColors();
-  const styles = useStyles();
-  const color = outline ? c.primary : c.onPrimary;
   return (
-    <Pressable
+    <Button
+      label={label}
       onPress={onPress}
       disabled={disabled}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      style={({ pressed }) => [styles.button, outline && styles.outline, (pressed || disabled) && styles.pressed]}
-    >
-      {icon && <Icon name={icon} size={20} color={color} />}
-      <Text style={[styles.label, { color }]}>{label}</Text>
-    </Pressable>
+      variant={outline ? 'outline' : 'primary'}
+      icon={icon && <Icon name={icon} size={20} color={outline ? c.primary : c.onPrimary} />}
+      colors={{ primary: c.primary, onPrimary: c.onPrimary }}
+      styles={{
+        button: { minHeight: 50, paddingHorizontal: spacing.lg, borderRadius: radius.md },
+        // Même atténuation qu'avant pour l'appui et l'état désactivé.
+        pressed: { opacity: 0.7 },
+        disabled: { opacity: 0.7 },
+      }}
+    />
   );
 }
-
-const useStyles = themedStyles((c) => ({
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    minHeight: 50,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: c.primary,
-  },
-  outline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: c.primary },
-  pressed: { opacity: 0.7 },
-  label: { fontSize: 16, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
-}));
