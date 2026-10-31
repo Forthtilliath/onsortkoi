@@ -11,7 +11,7 @@ Présentation fonctionnelle de l'app : [README.md](README.md).
 | Validation | [zod 4](https://zod.dev), messages en français (`z.locales.fr()`) |
 | Stockage | `@react-native-async-storage/async-storage` |
 | Fichiers | `expo-file-system` (sélecteur + lecture), `expo-sharing` (menu de partage) |
-| Composants partagés | `@forthtilliath/react-native-kit` (`BottomSheet`, `SwitchRow`, `ThemeToggle`, `ThemePreferenceProvider`, retours haptiques, `confirmDestructive`) |
+| Composants partagés | `@forthtilliath/react-native-kit` 0.22 : `Button`, `TextField`, `Section`, `BottomSheet` (avec son en-tête), `showToast` + `ToastHost`, `createThemedStyles` / `createPaletteMemo`, `pickTextFile`, `SwitchRow`, `ThemeToggle`, `ThemePreferenceProvider`, retours haptiques, `confirmDestructive`. Les fichiers de `src/ui/` en sont des adaptateurs minces qui appliquent la palette. |
 | Thème | clair / sombre / système (`userInterfaceStyle: automatic`, `expo-system-ui`), écran de démarrage `expo-splash-screen` |
 | Sauvegarde | `@forthtilliath/expo-backup` (Drive `appDataFolder`, fichier, annulation) + `@forthtilliath/expo-backup-ui` (`BackupScreen`) |
 | Tests | Jest 30 + `jest-expo` |
@@ -71,7 +71,7 @@ src/
 │   ├── updateCheck.ts   suivi des vérifications de mise à jour (zod)
 │   └── __tests__/
 ├── storage.ts           AsyncStorage + revalidation zod au chargement
-├── importFile.ts        sélecteur de fichier, limite de taille, lecture
+├── importFile.ts        pickJsonText (pickTextFile du kit : sélecteur, 10 Mo vérifiés avant lecture), puis import
 ├── useCollection.ts     chargement, import, remplacement de la collection
 ├── useSettings.ts       chargement et enregistrement des réglages
 ├── useSleeves.tsx      SleevesProvider : sleeves en mémoire, enregistrement de chaque modification
@@ -83,14 +83,15 @@ src/
 │   ├── filters/         SearchBar, FilterSheet, TagFilterRows, ActiveFilterBar
 │   ├── game/            GameCard, GameTile, GameSheet, libellés
 │   └── sleeves/         SleevesScreen, SleeveDetail, SleeveForm, StockAdjuster, pickers, LinkEditor, GameSleeves
-└── ui/                  briques génériques : thème (palettes, themedStyles), Sheet, ScreenModal, CardRow, TextField, Chip, Toast, boutons…
+└── ui/                  briques génériques : thème (palettes, themedStyles), adaptateurs du kit (Sheet, PrimaryButton,
+                         TextField, Section, Toast), et composants propres (ScreenModal, CardRow, ChoiceGrid, Chip, IconButton…)
 ```
 
 Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures, testables sans mock), les accès natifs dans les modules à la racine de `src/`, l'état React dans les hooks `use*`. Pas de fichier de plus de 300 lignes.
 
 ### Flux de données
 
-1. **Import** : `pickJsonText` (sélecteur système, fichier `content://` lu directement) → `importCollection` (zod) → `saveCollection` → état de `useCollection`.
+1. **Import** : `pickJsonText` (`pickTextFile` du kit : sélecteur système, fichier `content://` lu directement, taille plafonnée) → `importCollection` (zod) → `saveCollection` → état de `useCollection`.
 2. **Filtrage** : `useGameFilters` combine collection, filtres, tri et réglages. Par collection, il calcule une fois l'index de recherche (titre, sous-titre, auteurs normalisés) et la liste triée (`sortGames`, un seul `Intl.Collator`) ; `filterGames` filtre ensuite en gardant l'ordre. La recherche passe par `useDeferredValue` pour que la saisie reste fluide. `facetTags` compte, pour chaque tag, les jeux retenus par les *autres* critères : c'est le nombre affiché à côté du tag ; ces compteurs ne sont recalculés que panneau des filtres ouvert.
 3. **Réglages** : un changement passe par `pruneFor`, qui retire des filtres actifs les tags qui ne sont plus proposés. Un tag choisi depuis la fiche d'un jeu reste actif même s'il n'est pas proposé dans les filtres.
 4. **Sauvegarde** : `backup` ([backupManager.ts](src/backupManager.ts)), créé avec `createBackupManager`. `serialize` = `createBackup`, `parse` = `readBackup` (zod, le message d'erreur est affiché tel quel), `apply` = `saveBackup` (un seul `multiSet`) puis mise à jour de l'état via `setBackupAppliedListener`. `useCollection` et `useSettings` appellent `backup.notifyDataChanged()` après chaque écriture : envoi sur Drive 3 s plus tard, ou au passage en arrière-plan. `collect` lève une erreur tant qu'aucune collection n'existe : rien n'est envoyé.
@@ -106,7 +107,9 @@ Règle de découpage : la logique métier va dans `src/domain/` (fonctions pures
 
 ## Thème
 
-Palettes claire et sombre dans [theme.ts](src/ui/theme.ts) (contrastes WCAG vérifiés : texte ≥ 4,5:1, contours de champs et icônes ≥ 3:1). Un composant lit les couleurs avec `useColors()` et ses styles avec un hook créé par `themedStyles((c) => ({ … }))` (une feuille par palette, mise en cache). Les composants des libs sont habillés par `useKitStyles()` ([kitStyles.ts](src/ui/kitStyles.ts)) : leurs couleurs par défaut sont claires, chaque texte et fond y est redéfini. Le choix clair / sombre / système est enregistré sous `onsortkoi:theme:v1` (zod, hors des sauvegardes).
+Palettes claire et sombre dans [theme.ts](src/ui/theme.ts) (contrastes WCAG vérifiés : texte ≥ 4,5:1, contours de champs et icônes ≥ 3:1). Un composant lit les couleurs avec `useColors()` et ses styles avec un hook créé par `themedStyles((c) => ({ … }))` : une feuille par palette, créée au premier usage puis partagée par toutes les instances (`createThemedStyles` du kit ; `byPalette` = `createPaletteMemo` pour toute autre valeur).
+
+Les toasts (`showToast` du kit) s'affichent dans le `ToastHost` monté le plus récemment : celui de l'écran principal ([App.tsx](App.tsx), décalé au-dessus du bouton Au hasard), celui des Réglages et celui de chaque `ScreenModal`. Ils sont annoncés explicitement à TalkBack et durent plus longtemps si le réglage d'accessibilité « Délai pour agir » le demande. Les composants des libs sont habillés par `useKitStyles()` ([kitStyles.ts](src/ui/kitStyles.ts)) : leurs couleurs par défaut sont claires, chaque texte et fond y est redéfini. Le choix clair / sombre / système est enregistré sous `onsortkoi:theme:v1` (zod, hors des sauvegardes).
 
 ## Sécurité des données
 
@@ -118,7 +121,7 @@ Toute donnée venant de l'extérieur ou relue depuis le stockage est validée pa
 | Sauvegarde | en-tête `app` + `version`, puis `backupSchema` (dont `sleevesSchema`) | fichier entier rejeté, message localisé (jeu ou sleeves, champ) ; version inconnue refusée |
 | AsyncStorage | `storedCollectionSchema`, `settingsSchema`, `sleevesSchema`, `updateCheckSchema`, enums du thème et des versions de test | donnée ignorée (collection absente, aucune sleeve, réglages et thème par défaut, versions de test désactivées) |
 
-- Taille du fichier vérifiée avant lecture (`size` du sélecteur, sinon celle du descripteur ouvert) ; la longueur lue est revérifiée pour un fournisseur qui ne donne aucune taille.
+- Taille du fichier vérifiée avant lecture par `pickTextFile` du kit (`size` du sélecteur, sinon celle du descripteur ouvert) ; la longueur lue est revérifiée pour un fournisseur qui ne donne aucune taille.
 - Bornes : 10 Mo par fichier, 5 000 jeux, 100 tags par jeu, 100 caractères par tag, 200 par titre, joueurs ≤ 100, durée ≤ 24 h, âge ≤ 99, notes 0–10, identifiants uniques.
 - zod supprime les clés inconnues : les données personnelles de l'export (prix, propriétaire, commentaire…) ne sont jamais enregistrées.
 - Sleeves : 500 produits, nom 1–60 caractères, format 10–300 mm au dixième près (largeur ≤ hauteur), stock entier 0–99 999, note ≤ 100 caractères, identifiants et jeux associés uniques.
@@ -191,6 +194,26 @@ Sécurité : seule une release de ce dépôt est proposée et téléchargée (`r
 1. `version` à `X.Y.Z-alpha.N` dans [package.json](package.json) et [app.json](app.json) ; `android.versionCode` incrémenté à chaque APK publié (Android refuse d'installer un `versionCode` inférieur à celui installé).
 2. Build release et vérification de la signature (voir « Build et publication »).
 3. `gh release create vX.Y.Z-alpha.N Onsortkoi-X.Y.Z-alpha.N.apk --prerelease --target <branche>` : sans `--prerelease`, la version serait proposée à tout le monde.
+
+## Captures d'écran du README
+
+Les captures de [`docs/screenshots/`](docs/screenshots/) viennent de l'émulateur Pixel 6 (1080 × 2400), réduites à 540 × 1200 :
+
+1. Build release pour l'émulateur (les APK publiés, ARM uniquement, ne démarrent pas sur un émulateur x86_64) :
+   ```bash
+   npx expo prebuild --platform android
+   cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64
+   adb install -r app/build/outputs/apk/release/app-release.apk
+   ```
+2. Export MyLudo de démonstration (30 jeux connus et 2 extensions, métadonnées publiques) poussé par `adb push demo.json /sdcard/Download/`, puis **Importer un fichier**. Trois produits de sleeves saisis à la main (deux en 63,5 × 88, un en 45 × 68), associés à Aeon's End et Dominion.
+3. Barre d'état en mode démo :
+   ```bash
+   adb shell settings put global sysui_demo_allowed 1
+   adb shell am broadcast -a com.android.systemui.demo -e command enter
+   adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 2030
+   adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
+   ```
+4. `adb shell screencap -p /sdcard/s.png` puis `adb pull /sdcard/s.png`, réduire à 540 × 1200.
 
 ## Conventions
 
