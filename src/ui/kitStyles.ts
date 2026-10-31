@@ -2,6 +2,7 @@ import type { BackupScreenStyles } from '@forthtilliath/expo-backup-ui';
 import type { UpdateNotifierProps } from '@forthtilliath/expo-release-updates-ui/UpdateNotifier';
 import type { AddButtonStyles } from '@forthtilliath/react-native-kit/components/list/AddButton';
 import type { BottomSheetStyles } from '@forthtilliath/react-native-kit/components/overlay/BottomSheet';
+import type { BottomSheetHeaderStyles } from '@forthtilliath/react-native-kit/components/overlay/BottomSheetHeader';
 import type { SwitchRowColors, SwitchRowStyles } from '@forthtilliath/react-native-kit/components/settings/SwitchRow';
 import type { UpdateSettingsScreenStyles } from '@forthtilliath/react-native-kit/components/settings/UpdateSettingsScreen';
 import type { ThemeToggleStyles } from '@forthtilliath/react-native-kit/components/theme/ThemeToggle';
@@ -13,6 +14,18 @@ import { byPalette, type Palette, radius, spacing } from './theme';
 
 function sheet(c: Palette): BottomSheetStyles {
   return { sheet: { backgroundColor: c.background, paddingTop: 0, paddingBottom: 0, maxHeight: '90%' } };
+}
+
+function sheetHeader(c: Palette): BottomSheetHeaderStyles {
+  return {
+    handle: { backgroundColor: c.border, marginTop: spacing.sm, marginBottom: 0 },
+    header: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
+    title: { color: c.text },
+    subtitle: { color: c.muted },
+    action: { color: c.primary },
+    close: { backgroundColor: c.primarySoft },
+    closeIcon: { color: c.text },
+  };
 }
 
 function addButton(c: Palette): AddButtonStyles {
@@ -130,6 +143,7 @@ export const useKitStyles = byPalette((c) => {
   const { notifier, screen } = updates(c);
   return {
     sheet: sheet(c),
+    sheetHeader: sheetHeader(c),
     addButton: addButton(c),
     switchColors: switchColors(c),
     switchStyles: switchStyles(c),
