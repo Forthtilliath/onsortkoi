@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
+import { showToast } from '@forthtilliath/react-native-kit/components/feedback/toast';
 import { confirmDestructive } from '@forthtilliath/react-native-kit/utils/helpers/confirmDestructive';
 import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 
 import { isStandalone } from './domain/filters';
 import type { Game } from './domain/types';
-import { showToast } from './ui/toastHosts';
 import { backup } from './backupManager';
 import { pickAndImport } from './importFile';
 import { loadCollection, saveCollection, type StoredCollection } from './storage';

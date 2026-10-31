@@ -1,78 +1,30 @@
-import { useEffect, useState } from 'react';
-import { Animated, Pressable, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { radius, spacing, themedStyles } from './theme';
-import { registerToastHost, type ToastHostCallback } from './toastHosts';
+import { ToastHost as KitToastHost } from '@forthtilliath/react-native-kit/components/feedback/ToastHost';
 
-const DURATION_MS = 3500;
+import { radius, spacing, useColors } from './theme';
 
 interface Props {
   /** Marge au-dessus du bas de l'écran (safe area comprise), pour laisser un bouton flottant visible. */
   offset?: number;
 }
 
-/** Emplacement des toasts d'un écran ; à placer en dernier, par-dessus le contenu. */
+/**
+ * Emplacement des toasts d'un écran (`ToastHost` du kit, aux couleurs du thème) ; à placer en dernier,
+ * par-dessus le contenu. Le dernier monté (réglages, modale) reçoit les messages de `showToast`.
+ */
 export function ToastHost({ offset = 0 }: Props) {
-  const styles = useStyles();
+  const c = useColors();
   const { bottom } = useSafeAreaInsets();
-  const [message, setMessage] = useState<string | null>(null);
-  const [opacity] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const hide = () => {
-      Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(({ finished }) => {
-        if (finished) setMessage(null);
-      });
-    };
-    const host: ToastHostCallback = (next) => {
-      clearTimeout(timer);
-      setMessage(next);
-      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-      timer = setTimeout(hide, DURATION_MS);
-    };
-    const unregister = registerToastHost(host);
-    return () => {
-      clearTimeout(timer);
-      unregister();
-    };
-  }, [opacity]);
-
-  if (message === null) return null;
-
-  const translateY = opacity.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
   return (
-    <Animated.View
-      style={[styles.toast, { bottom: bottom + spacing.lg + offset, opacity, transform: [{ translateY }] }]}
-    >
-      <Pressable
-        onPress={() => {
-          setMessage(null);
-        }}
-        accessibilityRole="button"
-        accessibilityHint="Masque le message"
-      >
-        <Text style={styles.text}>{message}</Text>
-      </Pressable>
-    </Animated.View>
+    <KitToastHost
+      bottomOffset={bottom + spacing.lg + offset}
+      maxLines={6}
+      styles={{
+        toast: { backgroundColor: c.text, borderRadius: radius.md },
+        message: { color: c.background },
+        action: { color: c.primary },
+      }}
+    />
   );
 }
-
-const useStyles = themedStyles((c) => ({
-  toast: {
-    position: 'absolute',
-    left: spacing.lg,
-    right: spacing.lg,
-    borderRadius: radius.md,
-    backgroundColor: c.text,
-    elevation: 6,
-  },
-  text: {
-    color: c.background,
-    fontSize: 15,
-    lineHeight: 21,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-}));
