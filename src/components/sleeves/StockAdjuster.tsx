@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { showToast } from '@forthtilliath/react-native-kit/components/feedback/toast';
 import { successFeedback } from '@forthtilliath/react-native-kit/utils/helpers/haptics';
 
 import { parseCount, plural } from '../../domain/sleeves';
 import { PrimaryButton } from '../../ui/PrimaryButton';
 import { TextField } from '../../ui/TextField';
 import { radius, spacing, themedStyles } from '../../ui/theme';
-import { showToast } from '../../ui/toastHosts';
 
 interface Props {
   stock: number;
