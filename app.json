@@ -39,8 +39,12 @@
         }
       ],
       "@forthtilliath/expo-config-plugins/withAndroidAbis",
-      "@forthtilliath/expo-config-plugins/withShortCxxPath",
-      "./plugins/withCmakeVersion",
+      [
+        "@forthtilliath/expo-config-plugins/withShortCxxPath",
+        {
+          "cmakeVersion": "4.1.2"
+        }
+      ],
       "@react-native-google-signin/google-signin/app.plugin.js",
       "expo-secure-store",
       "expo-font",
